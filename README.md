@@ -9,9 +9,6 @@ Send your local git repository to Travis CI without needless commits and pushes.
 
 ## About
 
-If one of your projects uses Travis you know that things are a little frustrating when
-everything works locally but 
-
 - Have you ever spent hours committing tiny changes, pushing, waiting for a specific job over and over again?
 - Do your Pull Requests have 5 times as many commits as there are meaningful changes simply due to CI issues?
 - Tired of complicated `git` commands in order to roll-back and delete useless commits from your history?
@@ -72,8 +69,8 @@ on Linux and `C:\Users\[USERNAME]\trytravis` on Windows.
 
 ### [Register the `trytravis` repository with Travis CI](https://docs.travis-ci.com/user/getting-started/)
 
-Remember it should be named `trytravis` and that you should use your newly created
-user if you decided to create one.
+Remember the repository should be named `trytravis` and that you should use your
+newly created user if you decided to create one.
 
 ### Ready to Use the Tool!
 
