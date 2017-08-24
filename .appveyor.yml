@@ -1,0 +1,43 @@
+build: off
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python266-x64"
+      PYTHON_VERSION: "2.6.6"
+      PYTHON_ARCH: "64"
+      TOXENV: "py26"
+
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_VERSION: "2.7.x"
+      PYTHON_ARCH: "64"
+      TOXENV: "py27"
+
+    - PYTHON: "C:\\Python34-x64"
+      PYTHON_VERSION: "3.4.x"
+      PYTHON_ARCH: "64"
+      TOXENV: "py34"
+
+    - PYTHON: "C:\\Python35-x64"
+      PYTHON_VERSION: "3.5.x"
+      PYTHON_ARCH: "64"
+      TOXENV: "py35"
+
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "64"
+      TOXENV: "py36"
+
+install:
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  - "python -m pip install --disable-pip-version-check --user --upgrade pip"
+  - "python -m pip install tox"
+
+test_script:
+  - "tox"
+
+on_success:
+  - ".tox\\%TOXENV%\\Scripts\\activate"
+  - "python -m pip install codecov"
+  - "codecov --env PLATFORM,TOXENV"
