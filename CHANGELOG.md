@@ -18,3 +18,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Added the main interface of `main()` and `TryTravis()`
 - Added the ability to read your Personal Access Token from the local config.
+- Added ability to add token directly via command line with --token option.

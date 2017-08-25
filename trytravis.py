@@ -127,22 +127,24 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
+    token_input_argv = len(argv) == 2 and argv[0] in ['--token', '-t', '-T']
+
     # We only support a single argv parameter.
-    if len(argv) > 1:
+    if len(argv) > 1 and not token_input_argv:
         main(['--help'])
 
     # Parse the command and do the right thing.
-    if len(argv) == 1:
+    if len(argv) == 1 or token_input_argv:
         arg = argv[0]
 
         # Help/usage
         if arg in ['-h', '--help', '-H']:
             print('usage: trytravis [command]?\n'
                   '\n'
-                  '  [empty]         Running with no command submits your git repo to Travis.\n'
-                  '  --help, -h      Prints this help string.\n'
-                  '  --version, -v   Prints out the version, useful when submitting an issue.\n'
-                  '  --token, -t     Tells the program you wish to set your token\n'
+                  '  [empty]               Running with no command submits your git repo to Travis.\n'
+                  '  --help, -h            Prints this help string.\n'
+                  '  --version, -v         Prints out the version, useful when submitting an issue.\n'
+                  '  --token, -t [token]?  Tells the program you wish to set your token\n'
                   '\n'
                   'If you\'re still having troubles feel free to open an issue at our\n'
                   'issue tracker: https://github.com/SethMichaelLarson/trytravis/issues')
@@ -166,7 +168,10 @@ def main(argv=None):
 
         # Token
         elif arg in ['-t', '--token', '-T']:
-            token = getpass.getpass('Enter your Personal Access Token: ')
+            if len(argv) == 2:
+                token = argv[1]
+            else:
+                token = getpass.getpass('Enter your Personal Access Token: ')
             token = token.strip()
             if not os.path.isdir(config_dir):
                 os.makedirs(config_dir)
@@ -177,7 +182,7 @@ def main(argv=None):
             sys.exit(0)
 
     # No arguments means we're trying to submit to Travis.
-    else:
+    elif len(argv) == 0:
         trytravis = TryTravis(os.getcwd(), output=True)
         trytravis.start(watch=True)
         sys.exit(0)
