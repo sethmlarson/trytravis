@@ -15,7 +15,6 @@
 
 """ Send your local git repo changes to Travis CIwithout needless commits and pushes. """
 
-import argparse
 import getpass
 import platform
 import sys
@@ -125,13 +124,56 @@ class TryTravis(object):
 
 def main(argv=None):
     """ Main entry point when the user runs the `trytravis` command. """
-    try:
-        if argv is None:
-            argv = sys.argv[1:]
+    if argv is None:
+        argv = sys.argv[1:]
 
+    # We only support a single argv parameter.
+    if len(argv) > 1:
+        main(['--help'])
+
+    # Parse the command and do the right thing.
+    if len(argv) == 1:
+        arg = argv[0]
+
+        # Help/usage
+        if arg in ['-h', '--help', '-H']:
+            print('usage: trytravis [command]?\n'
+                  '\n'
+                  '  [empty]         Running with no command submits your git repo to Travis.\n'
+                  '  --help, -h      Prints this help string.\n'
+                  '  --version, -v   Prints out the version, useful when submitting an issue.\n'
+                  '  --token, -t     Tells the program you wish to set your token\n'
+                  '\n'
+                  'If you\'re still having troubles feel free to open an issue at our\n'
+                  'issue tracker: https://github.com/SethMichaelLarson/trytravis/issues')
+            sys.exit(0)
+
+        # Version
+        elif arg in ['-v', '--version', '-V']:
+            platform_system = platform.system()
+            if platform_system == 'linux':
+                name, version, _ = platform.dist()
+            else:
+                name = platform_system
+                version = platform.version()
+            print('trytravis %s (%s %s, python %s)' % (__version__,
+                                                       name.lower(),
+                                                       version,
+                                                       platform.python_version())
+            sys.exit(0)
+
+        # Token
+        elif arg in ['-t', '--token', '-T']:
+            token = getpass.getpass('Enter your Personal Access Token: ')
+            token = token.strip()
+            with open(os.path.join(config_dir, 'personal_access_token'), 'w+') as f:
+                f.truncate()
+                f.write(token)
+            print('Token saved successfully.')
+            sys.exit(0)
+
+    # No arguments means we're trying to submit to Travis.
+    else:
         trytravis = TryTravis(os.getcwd(), output=True)
         trytravis.start(watch=True)
-    finally:
-        sys.stdout.write(colorama.Style.RESET_ALL)
-        sys.stdout.flush()
-    sys.exit(0)
+        sys.exit(0)
