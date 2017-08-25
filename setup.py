@@ -7,7 +7,9 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 # Gathering metadata for the package.
 about = {}
 with open(os.path.join(base_dir, 'trytravis.py')) as f:
-    exec(f.read(), about)
+    for line in f:
+        if line.startswith('__'):
+            exec(line, about)
 
 # Gather all install_requires values.
 install_requires = ['requests>=2.14.0',
@@ -43,4 +45,4 @@ setup(name=about['__title__'],
       install_requires=install_requires,
       zip_safe=False,
       classifiers=classifiers,
-      entry_points={'console_scripts': ['trytravis=trytravis.main']})
+      entry_points={'console_scripts': ['trytravis=trytravis:main']})

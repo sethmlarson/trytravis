@@ -20,15 +20,12 @@ import platform
 import sys
 import os
 import colorama
-import requests
-import git
 
 
 __title__ = 'trytravis'
 __author__ = 'Seth Michael Larson'
 __email__ = 'sethmichaellarson@protonmail.com'
-__description__ = ('Send your local git repo changes to Travis CI '
-                   'without needless commits and pushes.')
+__description__ = 'Send your local git repo changes to Travis CI without needless commits and pushes.'
 __license__ = 'Apache-2.0'
 __url__ = 'https://github.com/SethMichaelLarson/trytravis'
 __version__ = '0.0.0.dev0'
@@ -36,10 +33,10 @@ __version__ = '0.0.0.dev0'
 __all__ = ['main', 'TryTravis']
 
 # Try to find the home directory for different platforms.
-_home_dir = os.expanduser('~')
+_home_dir = os.path.expanduser('~')
 if _home_dir == '~' or not os.path.isdir(_home_dir):
     try:  # Windows
-        import win32file
+        import win32file  # noqa: F401
         from win32com.shell import shell, shellcon
         home = shell.SHGetFolderPath(0, shellcon.CSIDL_PROFILE, None, 0)
     except ImportError:  # Try common directories?
@@ -67,7 +64,10 @@ class TryTravis(object):
         self.remote = None
         self.build = None
         self.build_url = None
-        
+
+        import requests
+        self.requests = requests
+
     def start(self, watch=False):
         self._load_personal_access_token()
         self._exchange_personal_access_token()
@@ -76,8 +76,8 @@ class TryTravis(object):
         self._wait_for_travis_build()
         if watch:
             self._watch_travis_build()
-        
-    def _load_personal_access_token(self)
+
+    def _load_personal_access_token(self):
         try:
             with open(os.path.join(config_dir, 'personal_access_token'), 'r') as f:
                 self.github_token = f.read().strip()
@@ -87,15 +87,15 @@ class TryTravis(object):
 
     def _exchange_personal_access_token(self):
         try:
-            with requests.post('https://api.travis.org/auth/github',
-                               headers=self._travis_headers(),
-                               json={'github_token': self.github_token}) as r:
+            with self.requests.post('https://api.travis.org/auth/github',
+                                    headers=self._travis_headers(),
+                                    json={'github_token': self.github_token}) as r:
                 if not r.ok:
                     raise RuntimeError('ERROR: Couldn\'t exchange your Personal Access '
                                        'Token for a Travis API token. Additional '
                                        'information: %s' % str(r.content))
                 self.travis_token = r.json()['access_token']
-        except requests.RequestException as e:
+        except self.requests.RequestException as e:
             raise RuntimeError('ERROR: Couldn\'t exchange your Personal Access '
                                'Token for a Travis API token. Additional information: '
                                '%s' % str(e))
@@ -151,21 +151,25 @@ def main(argv=None):
         # Version
         elif arg in ['-v', '--version', '-V']:
             platform_system = platform.system()
-            if platform_system == 'linux':
+            if platform_system == 'Linux':
                 name, version, _ = platform.dist()
             else:
                 name = platform_system
                 version = platform.version()
-            print('trytravis %s (%s %s, python %s)' % (__version__,
-                                                       name.lower(),
-                                                       version,
-                                                       platform.python_version())
+            import requests
+            print('trytravis %s (%s %s, python %s, requests %s)' % (__version__,
+                                                                    name.lower(),
+                                                                    version,
+                                                                    platform.python_version(),
+                                                                    requests.__version__))
             sys.exit(0)
 
         # Token
         elif arg in ['-t', '--token', '-T']:
             token = getpass.getpass('Enter your Personal Access Token: ')
             token = token.strip()
+            if not os.path.isdir(config_dir):
+                os.makedirs(config_dir)
             with open(os.path.join(config_dir, 'personal_access_token'), 'w+') as f:
                 f.truncate()
                 f.write(token)
@@ -177,3 +181,7 @@ def main(argv=None):
         trytravis = TryTravis(os.getcwd(), output=True)
         trytravis.start(watch=True)
         sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()
