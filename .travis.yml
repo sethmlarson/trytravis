@@ -60,7 +60,7 @@ cache:
     - ${HOME}/.cache
 
 install:
-  - chmod a+x -R .travis
+  - chmod a+x .travis/install.sh .travis/script.sh
   - ./.travis/install.sh 
 
 script:
