@@ -1,5 +1,5 @@
 import os
-from setuptools import setup, find_packages
+from setuptools import setup
 
 # Get the directory that the setup.py script is in.
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -13,9 +13,6 @@ with open(os.path.join(base_dir, 'trytravis.py')) as f:
 install_requires = ['requests>=2.14.0',
                     'colorama>=0.3.9',
                     'GitPython>=2.1.5']
-
-# Discover all packages, make sure to exclude bad directories.
-packages = find_packages('.', exclude=['tests', '.tox'])
 
 # Find all available classifiers at https://pypi.python.org/pypi?%3Aaction=list_classifiers
 classifiers = ['Development Status :: 3 - Alpha',
@@ -42,7 +39,7 @@ setup(name=about['__title__'],
       version=about['__version__'],
       description=about['__description__'],
       url=about['__url__'],
-      packages=packages,
+      py_modules=['trytravis'],
       install_requires=install_requires,
       zip_safe=False,
       classifiers=classifiers,
