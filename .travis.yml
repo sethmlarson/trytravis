@@ -32,19 +32,19 @@ matrix:
       
     # Mac OS Builds
     - os: osx
-      python: 2.7
+      language: generic
       env: TOXENV=py27
       
     - os: osx
-      python: 3.4
+      language: generic
       env: TOXENV=py34
 
     - os: osx
-      python: 3.5
+      language: generic
       env: TOXENV=py35
 
     - os: osx
-      python: 3.6
+      language: generic
       env: TOXENV=py36
 
     - os: osx
@@ -54,11 +54,17 @@ matrix:
   allow_failure:
     - python: nightly
 
+cache:
+  - pip
+  - directories:
+    - ${HOME}/.cache
+
 install:
-  - python -m pip install tox setuptools pip
+  - chmod a+x -R .travis
+  - ./.travis/install.sh 
 
 script:
-  - tox
+  - ./.travis/script.sh
 
 after_success:
   - source .tox/${TOXENV}/bin/activate
