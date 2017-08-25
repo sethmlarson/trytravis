@@ -1,0 +1,12 @@
+[run]
+include =
+    trytravis.py
+
+[report]
+exclude_lines =
+    except ImportError:
+    pass
+    return NotImplemented
+    def __repr__(self):
+    def __str__(self):
+    pragma: no coverage
