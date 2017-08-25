@@ -45,4 +45,5 @@ setup(name=about['__title__'],
       install_requires=install_requires,
       zip_safe=False,
       classifiers=classifiers,
-      entry_points={'console_scripts': ['trytravis=trytravis:main']})
+      entry_points={'console_scripts': ['trytravis=trytravis:main']},
+      extras_require={':sys_platform=="win32"': ['pywin32']})
