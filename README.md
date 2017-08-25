@@ -1,7 +1,7 @@
 # trytravis
 
 [![Travis](https://img.shields.io/travis/SethMichaelLarson/trytravis/master.svg?style=flat)](https://travis-ci.org/SethMichaelLarson/trytravis)
-[![AppVeyor](https://img.shields.io/appveyor/ci/SethMichaelLarson/trytravis/master.svg?style=flat)](https://travis-ci.org/SethMichaelLarson/trytravis)
+[![AppVeyor](https://img.shields.io/appveyor/ci/SethMichaelLarson/trytravis/master.svg?style=flat)](https://ci.appveyor.com/project/SethMichaelLarson/trytravis)
 [![Codecov](https://img.shields.io/codecov/c/github/SethMichaelLarson/trytravis/master.svg?style=flat)](https://codecov.io/gh/SethMichaelLarson/trytravis)
 [![BountySource](https://img.shields.io/badge/donate-bountysource-brightgreen.svg?style=flat)](https://salt.bountysource.com/teams/trytravis)
 
@@ -24,7 +24,7 @@ open a Pull Request to fix the problem!)
 ### Supported Platforms
 
 `trytravis` works on Linux, Windows, and Mac OS and only requires
-Python 2.7 or Python 3.3 or later to be installed to run.
+Python 2.7 or Python 3.4 or later to be installed to run.
 
 ### Install the latest `trytravis` via [`pip`](https://pip.pypa.io/en/stable/):
 ```
