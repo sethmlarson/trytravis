@@ -1,0 +1,6 @@
+include *.md
+include *.txt
+include *.ini
+include LICENSE
+include .coveragerc
+recursive-include tests *.py
