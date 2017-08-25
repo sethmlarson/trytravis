@@ -10,7 +10,9 @@ with open(os.path.join(base_dir, 'trytravis.py')) as f:
     exec(f.read(), about)
 
 # Gather all install_requires values.
-install_requires = ['requests>=2.14.0', 'colorama>=0.3.9']
+install_requires = ['requests>=2.14.0',
+                    'colorama>=0.3.9',
+                    'GitPython>=2.1.5']
 
 # Discover all packages, make sure to exclude bad directories.
 packages = find_packages('.', exclude=['tests', '.tox'])
