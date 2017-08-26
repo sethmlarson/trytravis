@@ -30,49 +30,40 @@ Python 2.7 or Python 3.4 or later to be installed to run.
 ```
 bash-4.4$ pip install trytravis
 bash-4.4$ trytravis --version
-1.0.0
+trytravis 1.0.0 (ubuntu 16.04.3 python 3.6.2)
 ```
 
 ### Optional: [Create a new GitHub account](https://help.github.com/articles/signing-up-for-a-new-github-account/).
 
-Create the GitHub account, make sure you use an email address that you
-can verify as that is required in order to create a Personal Access Token.
-Also register the account with Travis. You shouldn't have to log into this
-account again after finishing this tutorial but hang on to the credentials
-just in case.
+You can create a new GitHub account to allow for higher utilization of Travis
+builds so your `trytravis` builds don't conflict with regular builds.
+Make sure to also register the account with Travis.
 
 You can use your own GitHub account if you want as well.
 
-### [Create a GitHub repository](https://github.com/new) called '`trytravis`'.
-
-**IMPORTANT:** The repository *MUST* be named exactly `trytravis`. If the repository
-is not named this way then the tool won't function properly. The repository can be private
-and it is encouraged to be private if you plan on using the tool for working on private
-projects.
+### [Create a GitHub repository](https://github.com/new)
 
 Here's a [guide on how to create a GitHub repository](https://help.github.com/articles/create-a-repo/).
 Don't use an organization account as the owner of the repository.
 Use the same account that you used to create this repository for the next step.
 
-### Create a [Personal Access Token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) for your GitHub account.
+**IMPORTANT:** Make sure you don't use a repository where you have things you
+don't want to be changed. This tool will make major changes to the repository.
 
-After you've creating an access token copy it and then run the following command:
+**IMPORTANT** Make sure you can auto-commit to this repository
+([such as by permanent authentication](https://stackoverflow.com/a/28562679))
+to make things smoother.
 
-```
-bash-4.4$ trytavis token
-Enter your personal access token: 
-```
+### [Register the repository with Travis CI](https://docs.travis-ci.com/user/getting-started/)
 
-Copy the personal access token and paste it into the input and press Enter.
-To view or stop this from being used it can be found in the directory `~/.config/trytravis`
-on Linux and `C:\Users\[USERNAME]\trytravis` on Windows.
+Login to Travis, go to Accounts and turn the building on for the Repository. You
+may need to use `Sync Account` if you don't see the repository in the available list.
 
-### [Register the `trytravis` repository with Travis CI](https://docs.travis-ci.com/user/getting-started/)
+### Tell `trytravis` which GitHub repository to use
 
-Remember the repository should be named `trytravis` and that you should use your
-newly created user if you decided to create one.
+Run `trytravis --repo` and enter in the URL to the repository that you just created.
 
-### Ready to Use the Tool!
+### Ready to Use the Tool
 
 Move to the base directory of your project and execute the following command:
 
@@ -84,22 +75,25 @@ After this if `trytravis` is able to detect your GitHub repository and local cha
 you should see the following output from this command:
 
 ```
-Submitting your project...ok
-Waiting for a Travis build to start...ok
+Adding a temporary remote to `https://github.com/SethMichaelLarson/throwaway`...
+Adding all local changes...
+Commiting local changes...
+Pushing to `trytravis` remote...
+Reverting to old state...
+Waiting for a Travis build to appear for `d443d2e985812bd693e61e7093985a8e9451fad4f`...
+Travis build id: `268589271`
+Travis build URL: `https://travis-ci.org/SethMichaelLarson/throwaway/builds/268589271`
 
-Your build number is: 1234567
-Your build can be found here: https://travis-ci.org/trytravis-1/trytravis/1234567
-
-#1  ✔ linux c python 2.7 TOXENV=lint
-#2  ✔ linux c python 3.6 TOXENV=lint
-#3  ✕ linux s python 2.7 TOXENV=py27
-#4  ✔ linux c python 3.4 TOXENV=py34
-#5  ✔ linux c python 3.5 TOXENV=py35
-#6  ● linux s python 3.6 TOXENV=py36
-#7  ●  osx  s python 2.7 TOXENV=py27
-#8  ●  osx  c python 3.4 TOXENV=py34
-#9  ●  osx  c python 3.5 TOXENV=py35
-#10 ●  osx  s python 3.6 TOXENV=py36
+#1  P linux c python TOXENV=lint
+#2  X linux c python TOXENV=lint
+#3  X linux s python TOXENV=py27
+#4  P linux c python TOXENV=py34
+#5  P linux c python TOXENV=py35
+#6  * linux s python TOXENV=py36
+#7  *  osx  s python TOXENV=py27
+#8  *  osx  c python TOXENV=py34
+#9  *  osx  c python TOXENV=py35
+#10 *  osx  s python TOXENV=py36
 ```
 
 ## Contributing
@@ -109,6 +103,12 @@ including: Contributing financially via [BountySource](https://salt.bountysource
 opening pull requests, raising issues, updating documentation, spreading the word via social media,
 and more! Check out [`CONTRIBUTING.md`](https://github.com/SethMichaelLarson/trytravis/blob/master/CONTRIBUTING.md)
 for more information and guidelines to contributing.
+
+## Future Improvements
+
+- Support using SSH remotes (maybe via an option like `--ssh`?)
+- Support for automatically cancelling builds on `Ctrl+C` after
+  registering your Travis API token. (`--token`?)
 
 ## License
 

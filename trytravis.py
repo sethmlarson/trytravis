@@ -71,6 +71,7 @@ class TryTravis(object):
         self.commit = None
         self.build_id = None
         self.build_url = None
+        self.build_size = None
 
     def start(self):
         self._load_trytravis_github_slug()
@@ -153,9 +154,53 @@ class TryTravis(object):
     def _watch_travis_build(self):
         import requests
         try:
+            running = True
+            while running:
+                with requests.get('https://api.travis-ci.org/builds/%d' % self.build_id,
+                                  headers=self._travis_headers()) as r:
+                    json = r.json()
 
+                    if self.build_size is not None:
+                        if self.build_size > 1:
+                            sys.stdout.write('\r\x1b[%dA' % (self.build_size))
+                        else:
+                            sys.stdout.write('\r')
+
+                    self.build_size = len(json['jobs'])
+                    running = False
+                    current_number = 1
+                    for job in json['jobs']:
+                        if job['state'] in [None, 'queued', 'created', 'received']:
+                            color, state = colorama.Fore.YELLOW, '*'
+                            running = True
+                        elif job['state'] in ['started', 'running']:
+                            color, state = colorama.Fore.LIGHTYELLOW_EX, '*'
+                            running = True
+                        elif job['state'] == 'passed':
+                            color, state = colorama.Fore.LIGHTGREEN_EX, 'P'
+                        elif job['state'] == 'failed':
+                            color, state = colorama.Fore.LIGHTRED_EX, 'X'
+                        elif job['state'] == 'errored':
+                            color, state = colorama.Fore.LIGHTRED_EX, '!'
+                        else:
+                            raise RuntimeError('unknown state: %s' % str(job['state']))
+
+                        platform = job['config']['os']
+                        if platform == 'osx':
+                            platform = ' osx '
+
+                        env = job['config']['env']
+                        sudo = 's' if job['config']['sudo'] else 'c'
+                        lang = job['config']['language']
+
+                        number = str(current_number) + (' ' * (len(str(self.build_size)) - len(str(current_number))))
+                        current_number += 1
+
+                        print(color + '#%s %s %s %s %s %s' % (number, state, platform, sudo, lang, env) + colorama.Style.RESET_ALL)
+
+                time.sleep(3.0)
         except KeyboardInterrupt:
-            requests.post()
+            pass  # TODO: Cancel builds if we have their API token.
 
     def _travis_headers(self):
         return {'User-Agent': 'trytravis/%s (https://github.com/SethMichaelLarson/trytravis)' % __version__,
