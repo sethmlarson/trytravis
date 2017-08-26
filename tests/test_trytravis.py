@@ -60,3 +60,14 @@ def test_repo_cancel():
             trytravis.main(['--repo'])
 
     assert not os.path.isfile(os.path.join(trytravis.config_dir, 'slug'))
+
+
+def test_repo_invalid_url():
+    with mock.patch('sys.exit'):
+        with mock.patch('trytravis.user_input') as mock_input:
+            mock_input.side_effect = ['https://www.github.com/testauthor', 'y']
+            trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
+
+            trytravis.main(['--repo'])
+
+    assert not os.path.isfile(os.path.join(trytravis.config_dir, 'slug'))

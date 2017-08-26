@@ -203,7 +203,7 @@ class TryTravis(object):
 
                 time.sleep(3.0)
         except KeyboardInterrupt:
-            pass  # TODO: Cancel builds if we have their API token.
+            pass  # TODO: Cancel builds if we have an API token.
 
     def _travis_headers(self):
         return {'User-Agent': 'trytravis/%s (https://github.com/SethMichaelLarson/trytravis)' % __version__,
@@ -213,8 +213,11 @@ class TryTravis(object):
 def main(argv=None):
     """ Main entry point when the user runs the `trytravis` command. """
     try:
+        if 'TRAVIS' in os.environ:  # pragma: no coverage
+            raise RuntimeError('Detected that we are running in Travis. '
+                               'Stopping to prevent infinite loops.')
         colorama.init()
-        if argv is None:
+        if argv is None:  # pragma: no coverage
             argv = sys.argv[1:]
 
         repo_input_argv = len(argv) == 2 and argv[0] in ['--repo', '-r', '-R']
