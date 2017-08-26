@@ -19,30 +19,44 @@ def test_version():
         trytravis.main(['--version'])
 
 
-def test_token_input():
+def test_repo_input():
     with mock.patch('sys.exit'):
-        with mock.patch('getpass.getpass') as mock_getpass:
-            mock_getpass.return_value = 'abc123'
+        with mock.patch('trytravis.user_input') as mock_input:
+            mock_input.side_effect = ['https://www.github.com/testauthor/testname', 'yes']
             trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
 
-            trytravis.main(['--token'])
+            trytravis.main(['--repo'])
 
-            assert os.path.isfile(os.path.join(trytravis.config_dir, 'personal_access_token'))
+            assert os.path.isfile(os.path.join(trytravis.config_dir, 'slug'))
             
-            with open(os.path.join(trytravis.config_dir, 'personal_access_token'), 'r') as f:
-                assert f.read() == 'abc123'
+            with open(os.path.join(trytravis.config_dir, 'slug'), 'r') as f:
+                assert f.read() == 'testauthor/testname'
 
-            os.remove(os.path.join(trytravis.config_dir, 'personal_access_token'))
+            os.remove(os.path.join(trytravis.config_dir, 'slug'))
 
 
-def test_token_command_line():
+def test_repo_command_line():
     with mock.patch('sys.exit'):
-        trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
-        trytravis.main(['--token', 'abc123'])
+        with mock.patch('trytravis.user_input') as mock_input:
+            mock_input.side_effect = ['y']
+            trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
 
-        assert os.path.isfile(os.path.join(trytravis.config_dir, 'personal_access_token'))
+            trytravis.main(['--repo', 'https://github.com/testauthor/testname'])
 
-        with open(os.path.join(trytravis.config_dir, 'personal_access_token'), 'r') as f:
-            assert f.read() == 'abc123'
+            assert os.path.isfile(os.path.join(trytravis.config_dir, 'slug'))
 
-        os.remove(os.path.join(trytravis.config_dir, 'personal_access_token'))
+            with open(os.path.join(trytravis.config_dir, 'slug'), 'r') as f:
+                assert f.read() == 'testauthor/testname'
+
+            os.remove(os.path.join(trytravis.config_dir, 'slug'))
+
+
+def test_repo_cancel():
+    with mock.patch('sys.exit'):
+        with mock.patch('trytravis.user_input') as mock_input:
+            mock_input.side_effect = ['https://www.github.com/testauthor/testname', 'e']
+            trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
+
+            trytravis.main(['--repo'])
+
+    assert not os.path.isfile(os.path.join(trytravis.config_dir, 'slug'))

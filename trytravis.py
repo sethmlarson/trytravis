@@ -122,7 +122,7 @@ class TryTravis(object):
                 pass
 
     def _wait_for_travis_build(self):
-        print('Waiting for a Travis build to appear for `%s`' % self.commit)
+        print('Waiting for a Travis build to appear for `%s`...' % self.commit)
         import requests
 
         start_time = time.time()
@@ -130,7 +130,8 @@ class TryTravis(object):
             with requests.get('https://api.travis-ci.org/repos/%s/builds' % self.slug,
                               headers=self._travis_headers()) as r:
                 if not r.ok:
-                    raise RuntimeError('Could not reach the Travis API endpoint. Additional information: %s' % str(r.content))
+                    raise RuntimeError('Could not reach the Travis API endpoint. '
+                                       'Additional information: %s' % str(r.content))
 
                 # Search through all commits and builds to find our build.
                 commit_to_sha = {}
@@ -196,7 +197,9 @@ class TryTravis(object):
                         number = str(current_number) + (' ' * (len(str(self.build_size)) - len(str(current_number))))
                         current_number += 1
 
-                        print(color + '#%s %s %s %s %s %s' % (number, state, platform, sudo, lang, env) + colorama.Style.RESET_ALL)
+                        print(color +
+                              '#%s %s %s %s %s %s' % (number, state, platform, sudo, lang, env) +
+                              colorama.Style.RESET_ALL)
 
                 time.sleep(3.0)
         except KeyboardInterrupt:
@@ -214,14 +217,14 @@ def main(argv=None):
         if argv is None:
             argv = sys.argv[1:]
 
-        token_input_argv = len(argv) == 2 and argv[0] in ['--token', '-t', '-T']
+        repo_input_argv = len(argv) == 2 and argv[0] in ['--repo', '-r', '-R']
 
         # We only support a single argv parameter.
-        if len(argv) > 1 and not token_input_argv:
+        if len(argv) > 1 and not repo_input_argv:
             main(['--help'])
 
         # Parse the command and do the right thing.
-        if len(argv) == 1 or token_input_argv:
+        if len(argv) == 1 or repo_input_argv:
             arg = argv[0]
 
             # Help/usage
