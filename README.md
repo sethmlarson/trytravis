@@ -111,12 +111,7 @@ Travis build URL: `https://travis-ci.org/SethMichaelLarson/throwaway/builds/2685
 #10 *  osx  s python TOXENV=py36
 ```
 
-### Additional Recommended Steps
-
-#### If you're using `branches: only: ...` you should remove it.
-
-Unless you're working in one of the branches allowed by Travis this will probably make `trytravis`
-timeouton waiting for a Travis build to start with the correct commit. (Cuz there won't be one!)
+### Additional Recommended Steps / Troubleshooting
 
 #### Setup your Travis to automatically cancel builds
 
@@ -131,6 +126,11 @@ jobs that you need while you're debugging an issue and because your
 changes don't get committed to your main branch you don't need to worry
 about removing commits you can simply `git revert .travis.yml` when
 you're finished debugging.
+
+#### If you're using `branches: only: ...` in your `.travis.yml` you should remove it.
+
+Unless you're working in one of the branches allowed by Travis this will probably make `trytravis`
+timeout on waiting for a Travis build to start with the correct commit. (Cuz there won't be one!)
 
 ## Contributing
 
