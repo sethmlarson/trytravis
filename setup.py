@@ -16,7 +16,8 @@ install_requires = ['requests>=2.14.0',
                     'colorama>=0.3.9',
                     'GitPython>=2.1.5']
 
-# Find all available classifiers at https://pypi.python.org/pypi?%3Aaction=list_classifiers
+# Find all available classifiers at:
+# https://pypi.python.org/pypi?%3Aaction=list_classifiers
 classifiers = ['Development Status :: 3 - Alpha',
                'Intended Audience :: Developers',
                'License :: OSI Approved :: Apache Software License',

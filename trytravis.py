@@ -64,28 +64,34 @@ except NameError:
 # Usage output
 _USAGE = ('usage: trytravis [command]?\n'
           '\n'
-          '  [empty]               Running with no command submits your git repo to Travis.\n'
+          '  [empty]               Running with no command submits '
+          'your git repo to Travis.\n'
           '  --help, -h            Prints this help string.\n'
-          '  --version, -v         Prints out the version, useful when submitting an issue.\n'
-          '  --repo, -r [repo]?    Tells the program you wish to setup your building repository.\n'
+          '  --version, -v         Prints out the version, useful when '
+          'submitting an issue.\n'
+          '  --repo, -r [repo]?    Tells the program you wish to setup '
+          'your building repository.\n'
           '\n'
-          'If you\'re still having troubles feel free to open an issue at our\n'
-          'issue tracker: https://github.com/SethMichaelLarson/trytravis/issues')
+          'If you\'re still having troubles feel free to open an '
+          'issue at our\nissue tracker: https://github.com/SethMichaelLarson'
+          '/trytravis/issues')
 
-_HTTP_URL_REGEX = re.compile(r'^https://(?:www\.)?github\.com/([^/]+)/([^/]+)$')
-_SSH_URL_REGEX = re.compile(r'^ssh://git@github\.com/([^/]+)/([^/]+)$')
+_HTTPS_REGEX = re.compile(r'^https://(?:www\.)?github\.com/([^/]+)/([^/]+)$')
+_SSH_REGEX = re.compile(r'^ssh://git@github\.com/([^/]+)/([^/]+)$')
 
 
 def _input_github_repo(url=None):
+    """ Grabs input from the user and saves
+    it as their trytravis target repo """
     if url is None:
         url = user_input('Input the URL of the GitHub repository '
                          'to use as a `trytravis` repository: ')
     url = url.strip()
-    http_match = _HTTP_URL_REGEX.match(url)
-    ssh_match = _SSH_URL_REGEX.match(url)
+    http_match = _HTTPS_REGEX.match(url)
+    ssh_match = _SSH_REGEX.match(url)
     if not http_match and not ssh_match:
         raise RuntimeError('That URL doesn\'t look like a valid '
-                           'GitHub URL. We expect something'
+                           'GitHub URL. We expect something '
                            'of the form: `https://github.com/[USERNAME]/'
                            '[REPOSITORY]` or `ssh://git@github.com/'
                            '[USERNAME]/[REPOSITORY]')
@@ -131,14 +137,16 @@ def _submit_changes_to_github_repo(path, url):
             repo.delete_remote('trytravis')
         except:
             pass
-        print('Adding a temporary remote to `https://github.com/%s`...' % slug)
+        print('Adding a temporary remote to '
+              '`https://github.com/%s`...' % slug)
         remote = repo.create_remote('trytravis', url)
 
         print('Adding all local changes...')
         repo.git.add('--all')
         try:
             print('Committing local changes...')
-            repo.git.commit(m='trytravis-' + datetime.datetime.now().isoformat())
+            timestamp = datetime.datetime.now().isoformat()
+            repo.git.commit(m='trytravis-' + timestamp)
             commited = True
         except git.exc.GitCommandError as e:
             if 'nothing to commit' in str(e):
@@ -161,6 +169,7 @@ def _submit_changes_to_github_repo(path, url):
 
 
 def _wait_for_travis_build(url, commit):
+    """ Waits for a Travis build to appear with the given commit SHA """
     print('Waiting for a Travis build to appear for `%s`...' % commit)
     import requests
 
@@ -197,12 +206,14 @@ def _wait_for_travis_build(url, commit):
 
         time.sleep(3.0)
     else:
-        raise RuntimeError('Timed out while waiting for a Travis build to start. '
-                           'Is Travis configured for `%s`?' % url)
+        raise RuntimeError('Timed out while waiting for a Travis build '
+                           'to start. Is Travis configured for `%s`?' % url)
     return build_id
 
 
 def _watch_travis_build(build_id):
+    """ Watches and progressively outputs information
+    about a given Travis build """
     import requests
     try:
         build_size = None  # type: int
@@ -238,16 +249,23 @@ def _watch_travis_build(build_id):
                                      len(str(current_number)))
                     number = str(current_number) + padding
                     current_number += 1
-                    job_display = '#' + ' '.join([number, state, platform, sudo, lang, env])
+                    job_display = '#' + ' '.join([number,
+                                                  state,
+                                                  platform,
+                                                  sudo,
+                                                  lang,
+                                                  env])
 
                     print(color + job_display + colorama.Style.RESET_ALL)
 
             time.sleep(3.0)
     except KeyboardInterrupt:
-        pass  # TODO: Cancel builds if we have an API token.
+        pass
 
 
 def _travis_job_state(state):
+    """ Converts a Travis state into a state character, color,
+    and whether it's still running or a stopped state. """
     if state in [None, 'queued', 'created', 'received']:
         return colorama.Fore.YELLOW, '*', True
     elif state in ['started', 'running']:
@@ -258,15 +276,19 @@ def _travis_job_state(state):
         return colorama.Fore.LIGHTRED_EX, 'X', False
     elif state == 'errored':
         return colorama.Fore.LIGHTRED_EX, '!', False
+    elif state == 'canceled':
+        return colorama.Fore.LIGHTBLACK_EX, 'X', False
     else:
         raise RuntimeError('unknown state: %s' % str(state))
 
 
 def _slug_from_url(url):
-    http_match = _HTTP_URL_REGEX.match(url)
-    ssh_match = _SSH_URL_REGEX.match(url)
+    """ Parses a project slug out of either an HTTPS or SSH URL. """
+    http_match = _HTTPS_REGEX.match(url)
+    ssh_match = _SSH_REGEX.match(url)
     if not http_match and not ssh_match:
-        raise RuntimeError('Could not parse the URL (`%s`) for your repository.' % url)
+        raise RuntimeError('Could not parse the URL (`%s`) '
+                           'for your repository.' % url)
     if http_match:
         return '/'.join(http_match.groups())
     else:
@@ -289,12 +311,15 @@ def _version_string():
 
 
 def _travis_headers():
+    """ Returns the headers that the Travis API expects from clients. """
     return {'User-Agent': ('trytravis/%s (https://github.com/'
                            'SethMichaelLarson/trytravis)') % __version__,
             'Accept': 'application/vnd.travis-ci.2+json'}
 
 
 def _main(argv):
+    """ Function that acts just like main() except
+    doesn't catch exceptions. """
     repo_input_argv = len(argv) == 2 and argv[0] in ['--repo', '-r', '-R']
 
     # We only support a single argv parameter.
@@ -337,7 +362,8 @@ def main(argv=None):  # pragma: no coverage
             argv = sys.argv[1:]
         _main(argv)
     except RuntimeError as e:
-        print(colorama.Fore.RED + 'ERROR: ' + str(e) + colorama.Style.RESET_ALL)
+        print(colorama.Fore.RED + 'ERROR: ' +
+              str(e) + colorama.Style.RESET_ALL)
         sys.exit(1)
     else:
         sys.exit(0)
