@@ -11,8 +11,8 @@ Send local git changes to Travis CI without commits or pushes.
 
 I developed this tool because debugging Travis has plagued me many times, so many that
 I decided that creating this tool would save me a ton of time in the long run.
-I know this tool is effective []because I eat my own dog-food](). This tool has become a part of my
-standard every-day git workflow.
+I know this tool is effective [because I eat my own dog-food](https://github.com/SethMichaelLarson/trytravis-target).
+This tool has become a part of my standard every-day git workflow.
 
 Maybe it can save you some time too! Do you meet any of these criteria:
 
@@ -26,7 +26,7 @@ If any of these sound like you, `trytravis` is the tool for you.
 
 Here's a short guide on how to get started. If you've got questions or need
 a clarification on any steps don't hesitate to open an issue. (Or one better,
-open a Pull Request to fix the problem!)
+open a Pull Request to fix the problem for others!)
 
 ### Supported Platforms
 
