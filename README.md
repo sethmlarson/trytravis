@@ -113,6 +113,12 @@ Travis build URL: `https://travis-ci.org/SethMichaelLarson/throwaway/builds/2685
 
 ### Additional Recommended Steps / Troubleshooting
 
+#### Large communities around a single GitHub repository should encourage contributors to use `trytravis`
+
+This will save the very few builder-hours that the project has available from pointless
+debugging and excessive commits. Makes sure that builder time is spent effectively by
+only running builds that are expected to pass.
+
 #### Setup your Travis to automatically cancel builds
 
 Travis has this option per-repo to cancel old builds if there are new pushes to the same branch.
@@ -127,10 +133,10 @@ changes don't get committed to your main branch you don't need to worry
 about removing commits you can simply `git revert .travis.yml` when
 you're finished debugging.
 
-#### If you're using `branches: only: ...` in your `.travis.yml` you should remove it.
+#### If you're using `branches: only: ...` in your `.travis.yml` you may need to remove it.
 
 Unless you're working in one of the branches allowed by Travis this will probably make `trytravis`
-timeout on waiting for a Travis build to start with the correct commit. (Cuz there won't be one!)
+timeout on waiting for a Travis build to start with the correct commit. (Because there won't be one!)
 
 ## Contributing
 
