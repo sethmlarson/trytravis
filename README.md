@@ -62,6 +62,14 @@ may need to use `Sync Account` if you don't see the repository in the available 
 ### Tell `trytravis` which GitHub repository to use
 
 Run `trytravis --repo` and enter in the URL to the repository that you just created.
+You can use `ssh://git@github.com/[USERNAME]/[PROJECT]` or
+`https://github.com/[USERNAME]/[PROJECT]` as the URL for the repository.
+
+You should also setup your git so that you can push to this repository without
+entering your username and password each time. I highly recommend using
+SSH and register your SSH keys with GitHub. Check out
+[this guide](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
+for help setting this up for easy pushing to repositories.
 
 ### Ready to Use the Tool
 
@@ -96,6 +104,27 @@ Travis build URL: `https://travis-ci.org/SethMichaelLarson/throwaway/builds/2685
 #10 *  osx  s python TOXENV=py36
 ```
 
+### Additional Recommended Steps
+
+#### If you're using `branches: only: ...` you should remove it.
+
+Unless you're working in one of the branches allowed by Travis this will probably make `trytravis`
+timeouton waiting for a Travis build to start with the correct commit. (Cuz there won't be one!)
+
+#### Setup your Travis to automatically cancel builds
+
+Travis has this option per-repo to cancel old builds if there are new pushes to the same branch.
+This feature can be enabled by going into the repository settings and turning
+`Auto cancel branch builds` to `ON`.
+
+#### Modify your `.travis.yml` file to target only the jobs you need
+
+This will reduce the amount of time it takes to build the set of
+jobs that you need while you're debugging an issue and because your
+changes don't get committed to your main branch you don't need to worry
+about removing commits you can simply `git revert .travis.yml` when
+you're finished debugging.
+
 ## Contributing
 
 There are many ways to contribute to `trytravis`, even if you are not skilled in Python programming
@@ -103,12 +132,6 @@ including: Contributing financially via [BountySource](https://salt.bountysource
 opening pull requests, raising issues, updating documentation, spreading the word via social media,
 and more! Check out [`CONTRIBUTING.md`](https://github.com/SethMichaelLarson/trytravis/blob/master/CONTRIBUTING.md)
 for more information and guidelines to contributing.
-
-## Future Improvements
-
-- Support using SSH remotes (maybe via an option like `--ssh`?)
-- Support for automatically cancelling builds on `Ctrl+C` after
-  registering your Travis API token. (`--token`?)
 
 ## License
 

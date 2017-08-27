@@ -13,7 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-""" Send your local git repo changes to Travis CI without needless commits and pushes. """
+"""
+Send your local git repo changes to Travis CI
+without needless commits and pushes.
+"""
 
 import time
 import datetime
@@ -29,12 +32,11 @@ import git
 __title__ = 'trytravis'
 __author__ = 'Seth Michael Larson'
 __email__ = 'sethmichaellarson@protonmail.com'
-__description__ = 'Send your local git repo changes to Travis CI without needless commits and pushes.'
 __license__ = 'Apache-2.0'
 __url__ = 'https://github.com/SethMichaelLarson/trytravis'
 __version__ = '0.0.0.dev0'
 
-__all__ = ['main', 'TryTravis']
+__all__ = ['main']
 
 # Try to find the home directory for different platforms.
 _home_dir = os.path.expanduser('~')
@@ -62,230 +64,281 @@ try:
 except NameError:
     user_input = input
 
+# Usage output
+_USAGE = ('usage: trytravis [command]?\n'
+          '\n'
+          '  [empty]               Running with no command submits your git repo to Travis.\n'
+          '  --help, -h            Prints this help string.\n'
+          '  --version, -v         Prints out the version, useful when submitting an issue.\n'
+          '  --repo, -r [repo]?    Tells the program you wish to setup your building repository.\n'
+          '\n'
+          'If you\'re still having troubles feel free to open an issue at our\n'
+          'issue tracker: https://github.com/SethMichaelLarson/trytravis/issues')
 
-class TryTravis(object):
-    """ Object which can be used to submit jobs via `trytravis` programmatically. """
-    def __init__(self, path):
-        self.path = path
-        self.slug = None
-        self.commit = None
-        self.build_id = None
-        self.build_url = None
-        self.build_size = None
+_HTTP_URL_REGEX = re.compile(r'^https://(?:www\.)?github\.com/([^/]+)/([^/]+)$')
+_SSH_URL_REGEX = re.compile(r'^ssh://git@github\.com/([^/]+)/([^/]+)$')
 
-    def start(self):
-        self._load_trytravis_github_slug()
-        self._submit_project_to_github()
-        self._wait_for_travis_build()
-        self._watch_travis_build()
 
-    def _load_trytravis_github_slug(self):
+def _input_github_repo(url=None):
+    if url is None:
+        url = user_input('Input the URL of the GitHub repository '
+                         'to use as a `trytravis` repository: ')
+    url = url.strip()
+    http_match = _HTTP_URL_REGEX.match(url)
+    ssh_match = _SSH_URL_REGEX.match(url)
+    if not http_match and not ssh_match:
+        raise RuntimeError('That URL doesn\'t look like a valid '
+                           'GitHub URL. We expect something'
+                           'of the form: `https://github.com/[USERNAME]/'
+                           '[REPOSITORY]` or `ssh://git@github.com/'
+                           '[USERNAME]/[REPOSITORY]')
+
+    # Make sure that the user actually wants to use this repository.
+    accept = user_input('Remember that `trytravis` will make commits on your '
+                        'behalf to `%s`. Are you sure you wish to use this '
+                        'repository? Type `y` or `yes` to accept: ' % url)
+    if accept.lower() not in ['y', 'yes']:
+        raise RuntimeError('Operation aborted by user.')
+
+    if not os.path.isdir(config_dir):
+        os.makedirs(config_dir)
+    with open(os.path.join(config_dir, 'repo'), 'w+') as f:
+        f.truncate()
+        f.write(url)
+    print('Repository saved successfully.')
+
+
+def _load_github_repo():
+    """ Loads the GitHub repository from the users config. """
+    if 'TRAVIS' in os.environ:
+        raise RuntimeError('Detected that we are running in Travis. '
+                           'Stopping to prevent infinite loops.')
+    try:
+        with open(os.path.join(config_dir, 'repo'), 'r') as f:
+            return f.read()
+    except (OSError, IOError):
+        raise RuntimeError('Could not find your repository. '
+                           'Have you ran `trytravis --repo`?')
+
+
+def _submit_changes_to_github_repo(path, url):
+    """ Temporarily commits local changes and submits them to
+    the GitHub repository that the user has specified. Then
+    reverts the changes to the git repository if a commit was
+    necessary. """
+    slug = _slug_from_url(url)
+    repo = git.Repo(path)
+    commited = False
+    try:
         try:
-            with open(os.path.join(config_dir, 'slug'), 'r') as f:
-                self.slug = f.read()
-        except (OSError, IOError):
-            raise RuntimeError('Could not find your repository. Have you ran `trytravis --repo`?')
+            repo.delete_remote('trytravis')
+        except:
+            pass
+        print('Adding a temporary remote to `https://github.com/%s`...' % slug)
+        remote = repo.create_remote('trytravis', url)
 
-    def _submit_project_to_github(self):
-        repo = git.Repo(self.path)
-        commited = False
+        print('Adding all local changes...')
+        repo.git.add('--all')
         try:
-            try:
-                repo.delete_remote('trytravis')
-            except:
-                pass
-            print('Adding a temporary remote to `https://github.com/%s`...' % self.slug)
-            remote = repo.create_remote('trytravis', 'https://github.com/' + self.slug)
+            print('Committing local changes...')
+            repo.git.commit(m='trytravis-' + datetime.datetime.now().isoformat())
+            commited = True
+        except git.exc.GitCommandError as e:
+            if 'nothing to commit' in str(e):
+                commited = False
+            else:
+                raise
+        commit = repo.head.commit.hexsha
 
-            print('Adding all local changes...')
-            repo.git.add('--all')
-            try:
-                print('Committing local changes...')
-                repo.git.commit(m='trytravis-' + datetime.datetime.now().isoformat())
-                commited = True
-            except git.exc.GitCommandError as e:
-                if 'nothing to commit' in str(e):
-                    commited = False
-                else:
-                    raise
-            self.commit = repo.head.commit.hexsha
+        print('Pushing to `trytravis` remote...')
+        remote.push(force=True)
+    finally:
+        if commited:
+            print('Reverting to old state...')
+            repo.git.reset('HEAD^')
+        try:
+            repo.delete_remote('trytravis')
+        except:
+            pass
+    return commit
 
-            print('Pushing to `trytravis` remote...')
-            remote.push(force=True)
-        finally:
-            if commited:
-                print('Reverting to old state...')
-                repo.git.reset('HEAD^')
-            try:
-                repo.delete_remote('trytravis')
-            except:
-                pass
 
-    def _wait_for_travis_build(self):
-        print('Waiting for a Travis build to appear for `%s`...' % self.commit)
-        import requests
+def _wait_for_travis_build(url, commit):
+    print('Waiting for a Travis build to appear for `%s`...' % commit)
+    import requests
 
-        start_time = time.time()
-        while time.time() - start_time < 30:
-            with requests.get('https://api.travis-ci.org/repos/%s/builds' % self.slug,
-                              headers=self._travis_headers()) as r:
-                if not r.ok:
-                    raise RuntimeError('Could not reach the Travis API endpoint. '
-                                       'Additional information: %s' % str(r.content))
+    slug = _slug_from_url(url)
+    start_time = time.time()
+    build_id = None
 
-                # Search through all commits and builds to find our build.
-                commit_to_sha = {}
+    while time.time() - start_time < 30:
+        with requests.get('https://api.travis-ci.org/repos/%s/builds' % slug,
+                          headers=_travis_headers()) as r:
+            if not r.ok:
+                raise RuntimeError('Could not reach the Travis API '
+                                   'endpoint. Additional information: '
+                                   '%s' % str(r.content))
+
+            # Search through all commits and builds to find our build.
+            commit_to_sha = {}
+            json = r.json()
+            for travis_commit in json['commits']:
+                commit_to_sha[travis_commit['id']] = travis_commit['sha']
+
+            for build in json['builds']:
+
+                if (build['commit_id'] in commit_to_sha and
+                        commit_to_sha[build['commit_id']] == commit):
+
+                    build_id = build['id']
+                    print('Travis build id: `%d`' % build_id)
+                    print('Travis build URL: `https://travis-ci.org/'
+                          '%s/builds/%d`' % (slug, build_id))
+
+            if build_id is not None:
+                break
+
+        time.sleep(3.0)
+    else:
+        raise RuntimeError('Timed out while waiting for a Travis build to start. '
+                           'Is Travis configured for `%s`?' % url)
+    return build_id
+
+
+def _watch_travis_build(build_id):
+    import requests
+    try:
+        build_size = None  # type: int
+        running = True
+        while running:
+            with requests.get('https://api.travis-ci.org/builds/%d' % build_id,
+                              headers=_travis_headers()) as r:
                 json = r.json()
-                for commit in json['commits']:
-                    commit_to_sha[commit['id']] = commit['sha']
-                for build in json['builds']:
-                    if build['commit_id'] in commit_to_sha and commit_to_sha[build['commit_id']] == self.commit:
-                        self.build_id = build['id']
-                        self.build_url = 'https://travis-ci.org/%s/builds/%d' % (self.slug, self.build_id)
-                        print('Travis build id: `%d`' % self.build_id)
-                        print('Travis build URL: `%s`' % self.build_url)
 
-                if self.build_id is not None:
-                    break
+                if build_size is not None:
+                    if build_size > 1:
+                        sys.stdout.write('\r\x1b[%dA' % build_size)
+                    else:
+                        sys.stdout.write('\r')
+
+                build_size = len(json['jobs'])
+                running = False
+                current_number = 1
+                for job in json['jobs']:
+                    color, state, is_running = _travis_job_state(job['state'])
+                    if is_running:
+                        running = True
+
+                    platform = job['config']['os']
+                    if platform == 'osx':
+                        platform = ' osx '
+
+                    env = job['config']['env']
+                    sudo = 's' if job['config']['sudo'] else 'c'
+                    lang = job['config']['language']
+
+                    padding = ' ' * (len(str(build_size)) -
+                                     len(str(current_number)))
+                    number = str(current_number) + padding
+                    current_number += 1
+                    job_display = '#' + ' '.join([number, state, platform, sudo, lang, env])
+
+                    print(color + job_display + colorama.Style.RESET_ALL)
+
             time.sleep(3.0)
-        else:
-            raise RuntimeError('Timed out while waiting for a Travis build to start. '
-                               'Is Travis configured for `https://github.com/%s`?' % self.slug)
-
-    def _watch_travis_build(self):
-        import requests
-        try:
-            running = True
-            while running:
-                with requests.get('https://api.travis-ci.org/builds/%d' % self.build_id,
-                                  headers=self._travis_headers()) as r:
-                    json = r.json()
-
-                    if self.build_size is not None:
-                        if self.build_size > 1:
-                            sys.stdout.write('\r\x1b[%dA' % (self.build_size))
-                        else:
-                            sys.stdout.write('\r')
-
-                    self.build_size = len(json['jobs'])
-                    running = False
-                    current_number = 1
-                    for job in json['jobs']:
-                        if job['state'] in [None, 'queued', 'created', 'received']:
-                            color, state = colorama.Fore.YELLOW, '*'
-                            running = True
-                        elif job['state'] in ['started', 'running']:
-                            color, state = colorama.Fore.LIGHTYELLOW_EX, '*'
-                            running = True
-                        elif job['state'] == 'passed':
-                            color, state = colorama.Fore.LIGHTGREEN_EX, 'P'
-                        elif job['state'] == 'failed':
-                            color, state = colorama.Fore.LIGHTRED_EX, 'X'
-                        elif job['state'] == 'errored':
-                            color, state = colorama.Fore.LIGHTRED_EX, '!'
-                        else:
-                            raise RuntimeError('unknown state: %s' % str(job['state']))
-
-                        platform = job['config']['os']
-                        if platform == 'osx':
-                            platform = ' osx '
-
-                        env = job['config']['env']
-                        sudo = 's' if job['config']['sudo'] else 'c'
-                        lang = job['config']['language']
-
-                        number = str(current_number) + (' ' * (len(str(self.build_size)) - len(str(current_number))))
-                        current_number += 1
-
-                        print(color +
-                              '#%s %s %s %s %s %s' % (number, state, platform, sudo, lang, env) +
-                              colorama.Style.RESET_ALL)
-
-                time.sleep(3.0)
-        except KeyboardInterrupt:
-            pass  # TODO: Cancel builds if we have an API token.
-
-    def _travis_headers(self):
-        return {'User-Agent': 'trytravis/%s (https://github.com/SethMichaelLarson/trytravis)' % __version__,
-                'Accept': 'application/vnd.travis-ci.2+json'}
+    except KeyboardInterrupt:
+        pass  # TODO: Cancel builds if we have an API token.
 
 
-def main(argv=None):
+def _travis_job_state(state):
+    if state in [None, 'queued', 'created', 'received']:
+        return colorama.Fore.YELLOW, '*', True
+    elif state in ['started', 'running']:
+        return colorama.Fore.LIGHTYELLOW_EX, '*', True
+    elif state == 'passed':
+        return colorama.Fore.LIGHTGREEN_EX, 'P', False
+    elif state == 'failed':
+        return colorama.Fore.LIGHTRED_EX, 'X', False
+    elif state == 'errored':
+        return colorama.Fore.LIGHTRED_EX, '!', False
+    else:
+        raise RuntimeError('unknown state: %s' % str(state))
+
+
+def _slug_from_url(url):
+    http_match = _HTTP_URL_REGEX.match(url)
+    ssh_match = _SSH_URL_REGEX.match(url)
+    if not http_match and not ssh_match:
+        raise RuntimeError('Could not parse the URL (`%s`) for your repository.' % url)
+    if http_match:
+        return '/'.join(http_match.groups())
+    else:
+        return '/'.join(ssh_match.groups())
+
+
+def _version_string():
+    """ Gets the output for `trytravis --version`. """
+    platform_system = platform.system()
+    if platform_system == 'Linux':
+        os_name, os_version, _ = platform.dist()
+    else:
+        os_name = platform_system
+        os_version = platform.version()
+    python_version = platform.python_version()
+    return 'trytravis %s (%s %s, python %s)' % (__version__,
+                                                os_name.lower(),
+                                                os_version,
+                                                python_version)
+
+
+def _travis_headers():
+    return {'User-Agent': ('trytravis/%s (https://github.com/'
+                           'SethMichaelLarson/trytravis)') % __version__,
+            'Accept': 'application/vnd.travis-ci.2+json'}
+
+
+def _main(argv):
+    repo_input_argv = len(argv) == 2 and argv[0] in ['--repo', '-r', '-R']
+
+    # We only support a single argv parameter.
+    if len(argv) > 1 and not repo_input_argv:
+        _main(['--help'])
+
+    # Parse the command and do the right thing.
+    if len(argv) == 1 or repo_input_argv:
+        arg = argv[0]
+
+        # Help/usage
+        if arg in ['-h', '--help', '-H']:
+            print(_USAGE)
+
+        # Version
+        elif arg in ['-v', '--version', '-V']:
+            print(_version_string())
+
+        # Token
+        elif arg in ['-r', '--repo', '-R']:
+            if len(argv) == 2:
+                url = argv[1]
+            else:
+                url = None
+            _input_github_repo(url)
+
+    # No arguments means we're trying to submit to Travis.
+    elif len(argv) == 0:
+        url = _load_github_repo()
+        commit = _submit_changes_to_github_repo(os.getcwd(), url)
+        build_id = _wait_for_travis_build(url, commit)
+        _watch_travis_build(build_id)
+
+
+def main(argv=None):  # pragma: no coverage
     """ Main entry point when the user runs the `trytravis` command. """
     try:
-        if 'TRAVIS' in os.environ:  # pragma: no coverage
-            raise RuntimeError('Detected that we are running in Travis. '
-                               'Stopping to prevent infinite loops.')
         colorama.init()
-        if argv is None:  # pragma: no coverage
+        if argv is None:
             argv = sys.argv[1:]
-
-        repo_input_argv = len(argv) == 2 and argv[0] in ['--repo', '-r', '-R']
-
-        # We only support a single argv parameter.
-        if len(argv) > 1 and not repo_input_argv:
-            main(['--help'])
-
-        # Parse the command and do the right thing.
-        if len(argv) == 1 or repo_input_argv:
-            arg = argv[0]
-
-            # Help/usage
-            if arg in ['-h', '--help', '-H']:
-                print('usage: trytravis [command]?\n'
-                      '\n'
-                      '  [empty]               Running with no command submits your git repo to Travis.\n'
-                      '  --help, -h            Prints this help string.\n'
-                      '  --version, -v         Prints out the version, useful when submitting an issue.\n'
-                      '  --repo, -r [repo]?    Tells the program you wish to setup your building repository.\n'
-                      '\n'
-                      'If you\'re still having troubles feel free to open an issue at our\n'
-                      'issue tracker: https://github.com/SethMichaelLarson/trytravis/issues')
-
-            # Version
-            elif arg in ['-v', '--version', '-V']:
-                platform_system = platform.system()
-                if platform_system == 'Linux':
-                    name, version, _ = platform.dist()
-                else:
-                    name = platform_system
-                    version = platform.version()
-                print('trytravis %s (%s %s, python %s)' % (__version__,
-                                                           name.lower(),
-                                                           version,
-                                                           platform.python_version()))
-
-            # Token
-            elif arg in ['-r', '--repo', '-R']:
-                if len(argv) == 2:
-                    url = argv[1]
-                else:
-                    url = user_input('Input the URL of the GitHub repository to use as a `trytravis` repository: ')
-                url = url.strip()
-                match = re.match(r'^https://(?:www\.)?github.com/([^/]+)/([^/]+)$', url)
-                if not match:
-                    raise RuntimeError('That URL doesn\'t look like a valid GitHub URL. We expect something'
-                                       'of the form: `https://github.com/[USERNAME]/[REPOSITORY]`')
-
-                # Make sure that the user actually wants to use this repository.
-                author, name = match.groups()
-                accept = user_input('Remember that `trytravis` will make commits on your behalf to '
-                                    '`https://github.com/%s/%s`. Are you sure you wish to use this '
-                                    'repository? Type `y` or `yes` to accept: ' % (author, name))
-                if accept.lower() not in ['y', 'yes']:
-                    raise RuntimeError('Operation aborted by user.')
-
-                if not os.path.isdir(config_dir):
-                    os.makedirs(config_dir)
-                with open(os.path.join(config_dir, 'slug'), 'w+') as f:
-                    f.truncate()
-                    f.write('%s/%s' % (author, name))
-                print('Repository saved successfully.')
-
-        # No arguments means we're trying to submit to Travis.
-        elif len(argv) == 0:
-            trytravis = TryTravis(os.getcwd())
-            trytravis.start()
+        _main(argv)
     except RuntimeError as e:
         print(colorama.Fore.RED + 'ERROR: ' + str(e) + colorama.Style.RESET_ALL)
         sys.exit(1)
