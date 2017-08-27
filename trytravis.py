@@ -224,7 +224,7 @@ def _watch_travis_build(build_id):
                 build_size = len(json['jobs'])
                 running = False
                 current_number = 1
-                for job in json['jobs']:
+                for job in json['jobs']:  # pragma: no coverage
                     color, state, is_running = _travis_job_state(job['state'])
                     if is_running:
                         running = True
