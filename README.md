@@ -5,15 +5,22 @@
 [![Codecov](https://img.shields.io/codecov/c/github/SethMichaelLarson/trytravis/master.svg?style=flat)](https://codecov.io/gh/SethMichaelLarson/trytravis)
 [![BountySource](https://img.shields.io/badge/donate-bountysource-brightgreen.svg?style=flat)](https://salt.bountysource.com/teams/trytravis)
 
-Send your local git repository to Travis CI without needless commits and pushes.
+Send local git changes to Travis CI without commits or pushes.
 
 ## About
 
+I developed this tool because debugging Travis has plagued me many times, so many that
+I decided that creating this tool would save me a ton of time in the long run.
+I know this tool is effective []because I eat my own dog-food](). This tool has become a part of my
+standard every-day git workflow.
+
+Maybe it can save you some time too! Do you meet any of these criteria:
+
 - Have you ever spent hours committing tiny changes, pushing, waiting for a specific job over and over again?
 - Do your Pull Requests have 5 times as many commits as there are meaningful changes simply due to CI issues?
-- Tired of complicated `git` commands in order to roll-back and delete useless commits from your history?
+- Are you tired of complicated and obscure `git` commands in order to roll-back and delete useless commits from your history?
 
-If any of these are true, `trytravis` is the tool for you.
+If any of these sound like you, `trytravis` is the tool for you.
 
 ## Installation and Usage
 
