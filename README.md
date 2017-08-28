@@ -57,9 +57,17 @@ Use the same account that you used to create this repository for the next step.
 **IMPORTANT:** Make sure you don't use a repository where you have things you
 don't want to be changed. This tool will make major changes to the repository.
 
-**IMPORTANT** Make sure you can auto-commit to this repository
-([such as by permanent authentication](https://stackoverflow.com/a/28562679))
-to make things smoother.
+### Setup Authentication for the GitHub Repository
+
+You should setup your git so that you can push to this repository without
+entering your username and password each time.
+
+I highly recommend using SSH and register your SSH keys with GitHub. Check out
+[this guide](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
+for help setting this up for easy pushing to repositories. You must use a URL of `ssh://git@github.com/[USERNAME]/[REPOSITORY]`
+in order to use SSH authentication.
+
+If you can't use SSH authentication you can [potentially use credential caching](https://stackoverflow.com/a/28562679/5763213).
 
 ### [Register the repository with Travis CI](https://docs.travis-ci.com/user/getting-started/)
 
@@ -71,12 +79,6 @@ may need to use `Sync Account` if you don't see the repository in the available 
 Run `trytravis --repo` and enter in the URL to the repository that you just created.
 You can use `ssh://git@github.com/[USERNAME]/[PROJECT]` or
 `https://github.com/[USERNAME]/[PROJECT]` as the URL for the repository.
-
-You should also setup your git so that you can push to this repository without
-entering your username and password each time. I highly recommend using
-SSH and register your SSH keys with GitHub. Check out
-[this guide](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/)
-for help setting this up for easy pushing to repositories.
 
 ### Ready to Use the Tool
 
@@ -111,9 +113,9 @@ Travis build URL: `https://travis-ci.org/SethMichaelLarson/throwaway/builds/2685
 #10 *  osx  s python TOXENV=py36
 ```
 
-### Additional Recommended Steps / Troubleshooting
+### Additional Recommended Steps
 
-#### Large communities around a single GitHub repository should encourage contributors to use `trytravis`
+#### Large communities should encourage contributors to use `trytravis`
 
 This will save the very few builder-hours that the project has available from pointless
 debugging and excessive commits. Makes sure that builder time is spent effectively by
@@ -133,10 +135,16 @@ changes don't get committed to your main branch you don't need to worry
 about removing commits you can simply `git revert .travis.yml` when
 you're finished debugging.
 
-#### If you're using `branches: only: ...` in your `.travis.yml` you may need to remove it.
+### Troubleshooting
 
+#### The push occurs correctly but my build isn't appearing in Travis?
+
+Do you have `branches: only: ...` defined in your `.travis.yml` file?
 Unless you're working in one of the branches allowed by Travis this will probably make `trytravis`
 timeout on waiting for a Travis build to start with the correct commit. (Because there won't be one!)
+
+The suggested solution that I have used is to locally edit your `.travis.yml` file to allow
+that branch to be built and revert once you're done debugging before committing.
 
 ## Contributing
 
