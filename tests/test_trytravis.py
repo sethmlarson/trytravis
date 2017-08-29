@@ -75,9 +75,20 @@ def test_repo_cancel():
 def test_repo_invalid_url():
     with pytest.raises(RuntimeError):
         with mock.patch('trytravis.user_input') as mock_input:
-            mock_input.side_effect = ['https://www.github.com/testauthor', 'y']
+            mock_input.side_effect = ['https://www.github.com/testauthor-trytravis', 'y']
             trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
 
             trytravis._main(['--repo'])
 
     assert not os.path.isfile(os.path.join(trytravis.config_dir, 'repo'))
+
+
+def test_repo_doesnt_contain_trytravis():
+    with pytest.raises(RuntimeError):
+        with mock.patch('trytravis.user_input') as mock_input:
+            mock_input.side_effect = ['https://github.com/trytravis-target']
+            trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
+
+            trytravis._main(['--repo'])
+    assert not os.path.isfile(os.path.join(trytravis.config_dir, 'repo'))
+
