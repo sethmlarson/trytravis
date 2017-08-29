@@ -56,6 +56,10 @@ Here's a [guide on how to create a GitHub repository](https://help.github.com/ar
 Don't use an organization account as the owner of the repository.
 Use the same account that you used to create this repository for the next step.
 
+**IMPORTANT:** The name of the repository should contain `trytravis`. This is a feature
+that prevents users from accidentally pushing to a repository that they didn't intend to
+use as a target repository.
+
 **IMPORTANT:** Make sure you don't use a repository where you have things you
 don't want to be changed. This tool will make major changes to the repository.
 
