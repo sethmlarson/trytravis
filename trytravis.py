@@ -181,7 +181,7 @@ def _wait_for_travis_build(url, commit, committed_at):
     start_time = time.time()
     build_id = None
 
-    while time.time() - start_time < 30:
+    while time.time() - start_time < 60:
         with requests.get('https://api.travis-ci.org/repos/%s/builds' % slug,
                           headers=_travis_headers()) as r:
             if not r.ok:
