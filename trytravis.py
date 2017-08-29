@@ -129,7 +129,6 @@ def _submit_changes_to_github_repo(path, url):
     the GitHub repository that the user has specified. Then
     reverts the changes to the git repository if a commit was
     necessary. """
-    slug = _slug_from_url(url)
     repo = git.Repo(path)
     commited = False
     try:
@@ -349,6 +348,10 @@ def _main(argv):
             else:
                 url = None
             _input_github_repo(url)
+
+        # Help string
+        else:
+            _main(['--help'])
 
     # No arguments means we're trying to submit to Travis.
     elif len(argv) == 0:

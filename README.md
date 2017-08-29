@@ -14,6 +14,8 @@ I decided that creating this tool would save me a ton of time in the long run.
 I know this tool is effective [because I eat my own dog-food](https://github.com/SethMichaelLarson/trytravis-target).
 This tool has become a part of my standard every-day git workflow.
 
+[Check out `trytravis` in action in this `asciicast`](https://asciinema.org/a/135389)
+
 Maybe it can save you some time too! Do you meet any of these criteria:
 
 - Have you ever spent hours committing tiny changes, pushing, waiting for a specific job over and over again?
