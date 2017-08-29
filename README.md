@@ -187,6 +187,10 @@ limitations under the License.
 
 - dev.to: [Debugging Travis without Commits :tada:](https://dev.to/sethmichaellarson/debugging-travis-ci-without-commits-)
 
+## Supporters on [Bountysource](https://salt.bountysource.com/teams/trytravis)
+
+- [@eeeebbbbrrrr](https://github.com/eeeebbbbrrrr)
+
 ## Author
 
 Follow me on Twitter [`@pythoasis`](https://twitter.com/pythoasis)
