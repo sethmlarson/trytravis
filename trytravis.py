@@ -31,7 +31,7 @@ __author__ = 'Seth Michael Larson'
 __email__ = 'sethmichaellarson@protonmail.com'
 __license__ = 'Apache-2.0'
 __url__ = 'https://github.com/SethMichaelLarson/trytravis'
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 __all__ = ['main']
 
