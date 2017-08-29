@@ -18,7 +18,7 @@ def test_version():
 
 def test_repo_input():
     with mock.patch('trytravis.user_input') as mock_input:
-        mock_input.side_effect = ['https://www.github.com/testauthor/testname', 'yes']
+        mock_input.side_effect = ['https://www.github.com/testauthor/testname-trytravis', 'yes']
         trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
 
         trytravis._main(['--repo'])
@@ -26,7 +26,7 @@ def test_repo_input():
         assert os.path.isfile(os.path.join(trytravis.config_dir, 'repo'))
 
         with open(os.path.join(trytravis.config_dir, 'repo'), 'r') as f:
-            assert f.read() == 'https://www.github.com/testauthor/testname'
+            assert f.read() == 'https://www.github.com/testauthor/testname-trytravis'
 
         os.remove(os.path.join(trytravis.config_dir, 'repo'))
 
@@ -36,12 +36,12 @@ def test_repo_command_line():
         mock_input.side_effect = ['y']
         trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
 
-        trytravis._main(['--repo', 'https://github.com/testauthor/testname'])
+        trytravis._main(['--repo', 'https://github.com/testauthor/testname-trytravis'])
 
         assert os.path.isfile(os.path.join(trytravis.config_dir, 'repo'))
 
         with open(os.path.join(trytravis.config_dir, 'repo'), 'r') as f:
-            assert f.read() == 'https://github.com/testauthor/testname'
+            assert f.read() == 'https://github.com/testauthor/testname-trytravis'
 
         os.remove(os.path.join(trytravis.config_dir, 'repo'))
 
@@ -51,12 +51,12 @@ def test_repo_ssh():
         mock_input.side_effect = ['y']
         trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
 
-        trytravis._main(['--repo', 'ssh://git@github.com/testauthor/testname'])
+        trytravis._main(['--repo', 'ssh://git@github.com/testauthor/testname-trytravis'])
 
         assert os.path.isfile(os.path.join(trytravis.config_dir, 'repo'))
 
         with open(os.path.join(trytravis.config_dir, 'repo'), 'r') as f:
-            assert f.read() == 'ssh://git@github.com/testauthor/testname'
+            assert f.read() == 'ssh://git@github.com/testauthor/testname-trytravis'
 
         os.remove(os.path.join(trytravis.config_dir, 'repo'))
 
@@ -64,7 +64,7 @@ def test_repo_ssh():
 def test_repo_cancel():
     with pytest.raises(RuntimeError):
         with mock.patch('trytravis.user_input') as mock_input:
-            mock_input.side_effect = ['https://www.github.com/testauthor/testname', 'e']
+            mock_input.side_effect = ['https://www.github.com/testauthor/testname-trytravis', 'e']
             trytravis.config_dir = os.path.dirname(os.path.abspath(__file__))
 
             trytravis._main(['--repo'])
