@@ -154,10 +154,10 @@ def _submit_changes_to_github_repo(path, url):
             else:
                 raise
         commit = repo.head.commit.hexsha
+        committed_at = repo.head.commit.committed_datetime.isoformat()
 
         print('Pushing to `trytravis` remote...')
         remote.push(force=True)
-        start_time = datetime.datetime.utcnow().isoformat()
     finally:
         if commited:
             print('Reverting to old state...')
@@ -166,12 +166,13 @@ def _submit_changes_to_github_repo(path, url):
             repo.delete_remote('trytravis')
         except:
             pass
-    return commit, start_time
+    return commit, committed_at
 
 
-def _wait_for_travis_build(url, commit, start_time):
+def _wait_for_travis_build(url, commit, committed_at):
     """ Waits for a Travis build to appear with the given commit SHA """
-    print('Waiting for a Travis build to appear for `%s`...' % commit)
+    print('Waiting for a Travis build to appear '
+          'for `%s` after `%s`...' % (commit, committed_at))
     import requests
 
     slug = _slug_from_url(url)
@@ -189,14 +190,15 @@ def _wait_for_travis_build(url, commit, start_time):
             # Search through all commits and builds to find our build.
             commit_to_sha = {}
             json = r.json()
-            for travis_commit in json['commits']:
+            for travis_commit in sorted(json['commits'],
+                                        key=lambda x: x['committed_at']):
+                if travis_commit['committed_at'] < committed_at:
+                    continue
                 commit_to_sha[travis_commit['id']] = travis_commit['sha']
 
-            for build in sorted(json['builds'], key=lambda x: x['start_time']):
-
+            for build in json['builds']:
                 if (build['commit_id'] in commit_to_sha and
-                        commit_to_sha[build['commit_id']] == commit and
-                        build['start_time'] > start_time):
+                        commit_to_sha[build['commit_id']] == commit):
 
                     build_id = build['id']
                     print('Travis build id: `%d`' % build_id)
@@ -351,8 +353,8 @@ def _main(argv):
     # No arguments means we're trying to submit to Travis.
     elif len(argv) == 0:
         url = _load_github_repo()
-        commit, start_time = _submit_changes_to_github_repo(os.getcwd(), url)
-        build_id = _wait_for_travis_build(url, commit, start_time)
+        commit, committed = _submit_changes_to_github_repo(os.getcwd(), url)
+        build_id = _wait_for_travis_build(url, commit, committed)
         _watch_travis_build(build_id)
 
 
