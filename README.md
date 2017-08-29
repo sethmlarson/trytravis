@@ -159,6 +159,12 @@ timeout on waiting for a Travis build to start with the correct commit. (Because
 The suggested solution that I have used is to locally edit your `.travis.yml` file to allow
 that branch to be built and revert once you're done debugging before committing.
 
+## Future Improvements
+
+- Ideally would like to create a complete Travis interface in the command line to allow
+  easy usage and tracking of Travis builds from the command line.
+- Stream output of Travis from the command line.
+
 ## Contributing
 
 There are many ways to contribute to `trytravis`, even if you are not skilled in Python programming
