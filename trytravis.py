@@ -129,7 +129,10 @@ def _submit_changes_to_github_repo(path, url):
     the GitHub repository that the user has specified. Then
     reverts the changes to the git repository if a commit was
     necessary. """
-    repo = git.Repo(path)
+    try:
+        repo = git.Repo(path)
+    except Exception:
+        raise RuntimeError('Couldn\'t locate a repository at `%s`.' % path)
     commited = False
     try:
         try:

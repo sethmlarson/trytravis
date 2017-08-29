@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## 1.0.1
 
+### Added
+
+- Better message when running from a non-git repository.
+
 ### Fixed
 
 - When running multiple times with the same commit hash `trytravis` would sometimes
