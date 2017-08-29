@@ -163,6 +163,9 @@ opening pull requests, raising issues, updating documentation, spreading the wor
 and more! Check out [`CONTRIBUTING.md`](https://github.com/SethMichaelLarson/trytravis/blob/master/CONTRIBUTING.md)
 for more information and guidelines to contributing.
 
+Check out [`BACKERS.md`](https://github.com/SethMichaelLarson/trytravis/blob/master/BACKERS.md) for a list of
+supporters on our BountySource. Thank you for your supporter!
+
 ## License
 
 This project is licensed under `Apache-2.0`. Read [`LICENSE`](https://github.com/SethMichaelLarson/trytravis/blob/master/LICENSE) for more information.
@@ -186,10 +189,6 @@ limitations under the License.
 ## Media
 
 - dev.to: [Debugging Travis without Commits :tada:](https://dev.to/sethmichaellarson/debugging-travis-ci-without-commits-)
-
-## Supporters on [Bountysource](https://salt.bountysource.com/teams/trytravis)
-
-- [@eeeebbbbrrrr](https://github.com/eeeebbbbrrrr)
 
 ## Author
 
