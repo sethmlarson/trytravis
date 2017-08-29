@@ -247,9 +247,9 @@ def _watch_travis_build(build_id):
                     if platform == 'osx':
                         platform = ' osx '
 
-                    env = job['config']['env']
-                    sudo = 's' if job['config']['sudo'] else 'c'
-                    lang = job['config']['language']
+                    env = job['config'].get('env', '')
+                    sudo = 's' if job['config'].get('sudo', True) else 'c'
+                    lang = job['config'].get('language', 'generic')
 
                     padding = ' ' * (len(str(build_size)) -
                                      len(str(current_number)))
