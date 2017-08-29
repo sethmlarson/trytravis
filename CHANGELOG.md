@@ -12,6 +12,14 @@ All notable changes to Distrobe will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.0.1
+
+### Fixed
+
+- When running multiple times with the same commit hash `trytravis` would sometimes
+  find and watch the incorrect build.
+- `trytravis` would display an HTTPS URL even if an SSH URL was used in the output.
+
 ## 1.0.0
 
 ### Added

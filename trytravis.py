@@ -31,7 +31,7 @@ __author__ = 'Seth Michael Larson'
 __email__ = 'sethmichaellarson@protonmail.com'
 __license__ = 'Apache-2.0'
 __url__ = 'https://github.com/SethMichaelLarson/trytravis'
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 __all__ = ['main']
 
@@ -138,7 +138,7 @@ def _submit_changes_to_github_repo(path, url):
         except:
             pass
         print('Adding a temporary remote to '
-              '`https://github.com/%s`...' % slug)
+              '`%s`...' % url)
         remote = repo.create_remote('trytravis', url)
 
         print('Adding all local changes...')
@@ -157,6 +157,7 @@ def _submit_changes_to_github_repo(path, url):
 
         print('Pushing to `trytravis` remote...')
         remote.push(force=True)
+        start_time = datetime.datetime.utcnow().isoformat()
     finally:
         if commited:
             print('Reverting to old state...')
@@ -165,10 +166,10 @@ def _submit_changes_to_github_repo(path, url):
             repo.delete_remote('trytravis')
         except:
             pass
-    return commit
+    return commit, start_time
 
 
-def _wait_for_travis_build(url, commit):
+def _wait_for_travis_build(url, commit, start_time):
     """ Waits for a Travis build to appear with the given commit SHA """
     print('Waiting for a Travis build to appear for `%s`...' % commit)
     import requests
@@ -191,10 +192,11 @@ def _wait_for_travis_build(url, commit):
             for travis_commit in json['commits']:
                 commit_to_sha[travis_commit['id']] = travis_commit['sha']
 
-            for build in json['builds']:
+            for build in sorted(json['builds'], key=lambda x: x['start_time']):
 
                 if (build['commit_id'] in commit_to_sha and
-                        commit_to_sha[build['commit_id']] == commit):
+                        commit_to_sha[build['commit_id']] == commit and
+                        build['start_time'] > start_time):
 
                     build_id = build['id']
                     print('Travis build id: `%d`' % build_id)
@@ -349,8 +351,8 @@ def _main(argv):
     # No arguments means we're trying to submit to Travis.
     elif len(argv) == 0:
         url = _load_github_repo()
-        commit = _submit_changes_to_github_repo(os.getcwd(), url)
-        build_id = _wait_for_travis_build(url, commit)
+        commit, start_time = _submit_changes_to_github_repo(os.getcwd(), url)
+        build_id = _wait_for_travis_build(url, commit, start_time)
         _watch_travis_build(build_id)
 
 
