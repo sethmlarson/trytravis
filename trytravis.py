@@ -95,6 +95,17 @@ def _input_github_repo(url=None):
                            'of the form: `https://github.com/[USERNAME]/'
                            '[REPOSITORY]` or `ssh://git@github.com/'
                            '[USERNAME]/[REPOSITORY]')
+        
+    # Make sure that the user actually made a new repository on GitHub.
+    if http_match:
+        _, name = http_match.groups()
+    else:
+        _, name = ssh_match.groups()
+    if 'trytravis' not in name:
+        raise RuntimeError('You must have `trytravis` in the name of your '
+                           'repository. This is a security feature to reduce '
+                           'chances of running git push -f on a repository '
+                           'you don\'t mean to.')
 
     # Make sure that the user actually wants to use this repository.
     accept = user_input('Remember that `trytravis` will make commits on your '
