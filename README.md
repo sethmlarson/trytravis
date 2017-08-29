@@ -163,8 +163,10 @@ opening pull requests, raising issues, updating documentation, spreading the wor
 and more! Check out [`CONTRIBUTING.md`](https://github.com/SethMichaelLarson/trytravis/blob/master/CONTRIBUTING.md)
 for more information and guidelines to contributing.
 
+### BountySource Backers
+
 Check out [`BACKERS.md`](https://github.com/SethMichaelLarson/trytravis/blob/master/BACKERS.md) for a list of
-supporters on our BountySource. Thank you for your supporter!
+supporters on our BountySource. Thank you for your support!
 
 ## License
 
