@@ -115,6 +115,13 @@ Travis build URL: `https://travis-ci.org/SethMichaelLarson/throwaway/builds/2685
 #10 *  osx  s python TOXENV=py36
 ```
 
+### Upgrading to the Latest Version
+
+If you haven't upgraded lately I recommend running the following
+command to upgrade to the latest version of the tool:
+
+`pip install -U trytravis`
+
 ### Additional Recommended Steps
 
 #### Large communities should encourage contributors to use `trytravis`
@@ -175,6 +182,10 @@ This project is licensed under `Apache-2.0`. Read [`LICENSE`](https://github.com
  See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
+## Media
+
+- dev.to: [Debugging Travis without Commits :tada:](https://dev.to/sethmichaellarson/debugging-travis-ci-without-commits-)
 
 ## Author
 
