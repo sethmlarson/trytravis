@@ -1,3 +1,4 @@
-from ._travis import Travis
+from ._travis import Travis, Resource
+from ._exc import ResourceNotFound
 
-__all__ = ['Travis']
+__all__ = ['Travis', 'Resource', 'ResourceNotFound']

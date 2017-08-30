@@ -1,0 +1,2 @@
+class ResourceNotFound(LookupError):
+    pass

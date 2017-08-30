@@ -23,3 +23,21 @@ class Travis(object):
                 headers[key] = value
         kwargs['headers'] = headers
         return self.session.request(method, self.endpoint + path, **kwargs)
+
+    @property
+    def whoami(self):
+        """
+        :rtype: trytravis.api.User
+        :return: Returns the current authenticated user.
+        """
+        raise NotImplementedError()
+
+
+class Resource(object):
+    def __init__(self, travis, id, data=None):
+        if data is None:
+            data = {}
+
+        self.id = id
+        self._travis = travis  # type: Travis
+        self._data = data
