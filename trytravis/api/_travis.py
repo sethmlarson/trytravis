@@ -1,22 +1,21 @@
 import requests
 from trytravis import __version__
-from ._exc import ResourceNotFound, APIError
-from ._owner import User, Organization
+from trytravis.api import ResourceNotFound, APIError
 
 
 class Travis(object):
-    def __init__(self, endpoint, api_token):
+    def __init__(self, endpoint, travis_token):
         if endpoint.endswith('/'):
             endpoint = endpoint.rstrip('/')
         self.endpoint = endpoint  # type: str
-        self.api_token = api_token  # type: str
+        self.travis_token = travis_token  # type: str
         self.session = requests.Session()
 
     @property
     def headers(self):
         return {'Travis-API-Version': '3',
                 'User-Agent': 'trytravis/' + __version__,
-                'Authorization': 'token ' + self.api_token}
+                'Authorization': 'token ' + self.travis_token}
 
     def request(self, method, path, **kwargs):
         headers = self.headers
@@ -31,6 +30,7 @@ class Travis(object):
         :param login: GitHub login of either the Organization or User
         :rtype: trytravis.api.Owner
         """
+        from ._owner import User, Organization
         path = '/owner/%s' % login
         with self.request('GET', path) as r:
             if not r.status_code == 404:

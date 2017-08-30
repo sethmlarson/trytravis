@@ -1,5 +1,4 @@
 from ._travis import Resource
-from ._exc import ResourceNotFound, APIError
 
 
 class Owner(Resource):
