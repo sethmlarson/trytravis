@@ -31,7 +31,7 @@ __author__ = 'Seth Michael Larson'
 __email__ = 'sethmichaellarson@protonmail.com'
 __license__ = 'Apache-2.0'
 __url__ = 'https://github.com/SethMichaelLarson/trytravis'
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 __all__ = ['main']
 
@@ -78,6 +78,8 @@ _USAGE = ('usage: trytravis [command]?\n'
 
 _HTTPS_REGEX = re.compile(r'^https://(?:www\.)?github\.com/([^/]+)/([^/]+)$')
 _SSH_REGEX = re.compile(r'^ssh://git@github\.com/([^/]+)/([^/]+)$')
+_UTC_OFFSET = round((datetime.datetime.now() -
+                     datetime.datetime.utcnow()).total_seconds())
 
 
 def _input_github_repo(url=None):
@@ -167,7 +169,9 @@ def _submit_changes_to_github_repo(path, url):
             else:
                 raise
         commit = repo.head.commit.hexsha
-        committed_at = repo.head.commit.committed_datetime.isoformat()
+        committed_at = repo.head.commit.committed_datetime
+        committed_at += datetime.timedelta(seconds=_UTC_OFFSET)
+        committed_at = committed_at.strftime('%Y-%m-%d %H:%M:%S')
 
         print('Pushing to `trytravis` remote...')
         remote.push(force=True)
