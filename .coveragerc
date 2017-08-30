@@ -1,6 +1,6 @@
 [run]
 include =
-    trytravis.py
+    trytravis/*
 
 [report]
 exclude_lines =

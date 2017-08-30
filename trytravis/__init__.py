@@ -24,14 +24,13 @@ import os
 import re
 import colorama
 import git
-
-
-__title__ = 'trytravis'
-__author__ = 'Seth Michael Larson'
-__email__ = 'sethmichaellarson@protonmail.com'
-__license__ = 'Apache-2.0'
-__url__ = 'https://github.com/SethMichaelLarson/trytravis'
-__version__ = '1.0.3'
+from .__about__ import (__title__,  # noqa: F401
+                        __version__,
+                        __author__,
+                        __description__,
+                        __email__,
+                        __license__,
+                        __url__)
 
 __all__ = ['main']
 
@@ -41,6 +40,7 @@ if _home_dir == '~' or not os.path.isdir(_home_dir):
     try:  # Windows
         import win32file  # noqa: F401
         from win32com.shell import shell, shellcon
+
         home = shell.SHGetFolderPath(0, shellcon.CSIDL_PROFILE, None, 0)
     except ImportError:  # Try common directories?
         for _home_dir in [os.environ.get('HOME', ''),
@@ -95,7 +95,7 @@ def _input_github_repo(url=None):
                            'of the form: `https://github.com/[USERNAME]/'
                            '[REPOSITORY]` or `ssh://git@github.com/'
                            '[USERNAME]/[REPOSITORY]')
-        
+
     # Make sure that the user actually made a new repository on GitHub.
     if http_match:
         _, name = http_match.groups()
@@ -211,8 +211,7 @@ def _wait_for_travis_build(url, commit, committed_at):
 
             for build in json['builds']:
                 if (build['commit_id'] in commit_to_sha and
-                        commit_to_sha[build['commit_id']] == commit):
-
+                            commit_to_sha[build['commit_id']] == commit):
                     build_id = build['id']
                     print('Travis build id: `%d`' % build_id)
                     print('Travis build URL: `https://travis-ci.org/'
