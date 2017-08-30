@@ -95,7 +95,7 @@ def _input_github_repo(url=None):
                            'of the form: `https://github.com/[USERNAME]/'
                            '[REPOSITORY]` or `ssh://git@github.com/'
                            '[USERNAME]/[REPOSITORY]')
-        
+
     # Make sure that the user actually made a new repository on GitHub.
     if http_match:
         _, name = http_match.groups()
