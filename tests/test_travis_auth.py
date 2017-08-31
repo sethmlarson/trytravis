@@ -1,7 +1,7 @@
 import pytest
 import mock
-import trytravis
-from trytravis.models import Travis, AuthenticationError
+import trent
+from trent.models import Travis, AuthenticationError
 
 
 @pytest.mark.parametrize('endpoint,scopes', [('https://api.travis-ci.org', ['read:org',
@@ -15,10 +15,10 @@ from trytravis.models import Travis, AuthenticationError
                                              ('https://example.com/api', ['user:email', 'read:org', 'repo'])
                                              ])
 def test_scopes_based_on_travis_endpoint(mocker, endpoint, scopes):
-    mock_create_token = mocker.patch('trytravis.models.Travis._create_github_token')
+    mock_create_token = mocker.patch('trent.models.Travis._create_github_token')
     mock_create_token.return_value = 'github_token', 1
-    mock_delete_token = mocker.patch('trytravis.models.Travis._delete_github_token')
-    mock_swap_token = mocker.patch('trytravis.models.Travis._swap_github_token_for_access_token')
+    mock_delete_token = mocker.patch('trent.models.Travis._delete_github_token')
+    mock_swap_token = mocker.patch('trent.models.Travis._swap_github_token_for_access_token')
     mock_swap_token.return_value = 'travis_token'
 
     t = Travis.auth_handshake(endpoint, 'https://api.github.com', 'username', 'password')
@@ -41,8 +41,8 @@ def test_create_github_token(mocker):
     mock_post.assert_called_with('https://api.github.com/authorizations',
                                  auth=('username', 'password'),
                                  json={'scopes': ['user:email', 'read:org', 'repo'],
-                                       'note': 'Temporary authentication token for trytravis.'},
-                                 headers={'User-Agent': 'trytravis/' + trytravis.__version__,
+                                       'note': 'Temporary authentication token for trent.'},
+                                 headers={'User-Agent': 'trent/' + trent.__version__,
                                           'Accept': 'application/vnd.github.v3+json'})
 
     assert token == 'github_token'
@@ -70,5 +70,5 @@ def test_delete_github_token(mocker):
 
     mock_request.assert_called_with('DELETE', 'https://api.github.com/authorizations/1234',
                                     auth=('username', 'password'),
-                                    headers={'User-Agent': 'trytravis/' + trytravis.__version__,
+                                    headers={'User-Agent': 'trent/' + trent.__version__,
                                              'Accept': 'application/vnd.github.v3+json'})

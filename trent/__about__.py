@@ -1,0 +1,7 @@
+__title__ = 'trent'
+__author__ = 'Seth Michael Larson'
+__email__ = 'sethmichaellarson@protonmail.com'
+__license__ = 'Apache-2.0'
+__url__ = 'https://github.com/SethMichaelLarson/trent'
+__description__ = 'Snappy Command-Line Client for managing Travis CI.'
+__version__ = '2.0.0'

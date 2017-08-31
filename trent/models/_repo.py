@@ -2,6 +2,8 @@ from ._travis import Resource
 
 
 class Repository(Resource):
+    """Resource representing a single repository."""
+
     @property
     def name(self):
         """The name of the Repository on GitHub.
@@ -63,7 +65,7 @@ class Repository(Resource):
     def owner(self):
         """The Owner of the Repository.
         
-        :rtype: trytravis.api.Owner
+        :rtype: trent.api.Owner
         """
         from ._owner import User, Organization
         owner_json = self._get_property('owner')
@@ -76,7 +78,7 @@ class Repository(Resource):
     def current_build(self):
         """The current build for the Repository.
         
-        :rtype: trytravis.api.Build
+        :rtype: trent.api.Build
         """
         from ._build import Build
         build_id = self._get_property('current_build', cache_time=5)
@@ -86,7 +88,7 @@ class Repository(Resource):
     def default_branch(self):
         """The default branch for the Repository on GitHub.
         
-        :rtype: trytravis.api.Branch
+        :rtype: trent.api.Branch
         """
         from ._branch import Branch
         branch_id = self._get_property('default_branch')
@@ -111,3 +113,7 @@ class Repository(Resource):
         """Unstar the Repository on Travis."""
         with self._travis.request('POST', '/repo/%d/unstar' % self.id) as r:
             pass  # TODO: Handle errors and invalidate the `starred` prop.
+
+    def _get_standard_rep(self):
+        with self._travis.request('GET', '/repo/%d' % self.id) as r:
+            self._data = r.json()

@@ -1,5 +1,6 @@
+import time
 import requests
-from trytravis import __version__
+import trent
 
 
 class AuthenticationError(Exception):
@@ -77,10 +78,10 @@ class Travis(object):
                   so it may be deleted after creation.
         :rtype: typing.Tuple[str, int]"""
 
-        headers = {'User-Agent': 'trytravis/' + __version__,
+        headers = {'User-Agent': trent.user_agent,
                    'Accept': 'application/vnd.github.v3+json'}
         data = {'scopes': scopes,
-                'note': 'Temporary authentication token for trytravis.'}
+                'note': 'Temporary authentication token for trent.'}
 
         # First we contant GitHub and attempt to authenticate with
         # them to create a Personal Access token with the proper scopes.
@@ -105,7 +106,7 @@ class Travis(object):
         :param password: GitHub password.
         :param token_id: ID of the token received from _create_github_token()
         """
-        headers = {'User-Agent': 'trytravis/' + __version__,
+        headers = {'User-Agent': trent.user_agent,
                    'Accept': 'application/vnd.github.v3+json'}
 
         requests.request('DELETE', endpoint + '/authorizations/%d' % token_id,
@@ -120,7 +121,7 @@ class Travis(object):
         :param github_token: GitHub Personal Access token.
         :returns: Travis Access Token.
         """
-        headers = {'User-Agent': 'trytravis/' + __version__,
+        headers = {'User-Agent': trent.user_agent,
                    'Accept': 'application/vnd.travis-ci.2+json'}
 
         with requests.post(endpoint + '/auth/github',
@@ -135,10 +136,12 @@ class Travis(object):
 
     @property
     def headers(self):
-        return {'Travis-API-Version': '3',
-                'User-Agent': 'trytravis/' + __version__,
-                'Authorization': 'token ' + self.access_token,
-                'Accept': 'application/json'}
+        headers = {'Travis-API-Version': '3',
+                   'User-Agent': trent.user_agent,
+                   'Accept': 'application/json'}
+        if self.access_token is not None:
+            headers['Authorization'] = 'token ' + self.access_token
+        return headers
 
     def request(self, method, path, **kwargs):
         """Make a request to the Travis API.
@@ -148,6 +151,7 @@ class Travis(object):
         :param kwargs: Arguments to pass to requests.
         :return: Request response.
         """
+        print(method, path)
         headers = self.headers
         if 'headers' in kwargs:
             for key, value in kwargs['headers'].items():
@@ -155,11 +159,23 @@ class Travis(object):
         kwargs['headers'] = headers
         return self.session.request(method, self.endpoint + path, **kwargs)
 
+    def request_paginated(self, path, get_list_func):
+        """Make a request and return a Paginator to lazily
+        evaluate the paginated responses.
+        
+        :param method: HTTP method to use. (ie 'GET', 'POST'...)
+        :param path: URL path to request. (ie '/user')
+        :param get_list_func: Function that converts the responses into
+                              entries that are returned by the iterator.
+        :return: Request response.
+        """
+        return Paginator(self, path, get_list_func)
+
     def get_owner(self, login):
         """Get an Owner by their login information.
         
         :param login: GitHub login of either the Organization or User
-        :rtype: trytravis.api.Owner
+        :rtype: trent.api.Owner
         """
         from ._owner import User, Organization
         path = '/owner/%s' % login
@@ -174,13 +190,15 @@ class Travis(object):
     def current_user(self):
         """Gets the currently authenticated User.
         
-        :rtype: trytravis.api.User
+        :rtype: trent.api.User
         :return: Returns the current authenticated user.
         """
         raise NotImplementedError()
 
 
 class Resource(object):
+    """Base class for a resource in the Travis API."""
+
     def __init__(self, travis, id, data=None):
         if data is None:
             data = {}
@@ -188,19 +206,41 @@ class Resource(object):
         self.id = id
         self._travis = travis  # type: Travis
         self._data = data
+        self._cache_time = None
 
-    def _get_property(self, name):
+    def _get_property(self, name, cache_time=10):
+        """Get a basic property from the JSON
+        representation of the object. If needed
+        will refresh the object property. """
+        current_time = time.time()
+
+        # If we're using a cached property we might need
+        # to get values again.
+        if (self._cache_time is not None and
+                self._cache_time + cache_time > current_time):
+            del self._data[name]
+
         if name not in self._data:
             self._get_standard_rep()
+            self._cache_time = time.time()
         return self._data[name]
 
+    def _del_property(self, name):
+        """Invalidate a property if it is defined within `_data`
+        in order to force a request on next usage."""
+        if name in self._data:
+            del self._data[name]
+
     def _get_standard_rep(self):
+        """Implement this function per-model to fill the
+        `_data` property with JSON values for the model. """
         raise NotImplementedError()
 
 
 class Paginator(object):
-    """ Helper class for lazily evaluating paginated
-    responses from Travis API. """
+    """Helper class for lazily evaluating paginated
+    responses from Travis API."""
+
     def __init__(self, travis, path, get_list_func):
         self._travis = travis  # type: Travis
         self._path = path  # type: str
@@ -209,11 +249,7 @@ class Paginator(object):
     def __iter__(self):
         while True:
             with self._travis.request('GET', self._path) as r:
-                if not r.status_code == 404:
-                    raise ResourceNotFound(self._path)
-                elif not r.ok:
-                    raise APIError(r.status_code)
-
+                print(r.content)
                 data = r.json()
                 for ent in self._get_list_func(data):
                     yield ent

@@ -6,7 +6,7 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Gathering metadata for the package.
 about = {}
-with open(os.path.join(base_dir, 'trytravis', '__about__.py')) as f:
+with open(os.path.join(base_dir, 'trent', '__about__.py')) as f:
     exec(f.read(), about)
 
 # Gather all install_requires values.
@@ -45,5 +45,5 @@ setup(name=about['__title__'],
       install_requires=install_requires,
       zip_safe=False,
       classifiers=classifiers,
-      entry_points={'console_scripts': ['trytravis=trytravis.__init__:main']},
+      entry_points={'console_scripts': ['trent=trent.__init__:main']},
       extras_require={':sys_platform=="win32"': ['pypiwin32>=214']})
