@@ -1,23 +1,153 @@
 import requests
 from trytravis import __version__
-from trytravis.api import ResourceNotFound, APIError
+
+
+class AuthenticationError(Exception):
+    pass
 
 
 class Travis(object):
-    def __init__(self, endpoint, travis_token):
-        if endpoint.endswith('/'):
-            endpoint = endpoint.rstrip('/')
+    """The central object within the Travis API model that handles the
+    access token along with HTTP requests to the API endpoint of choice.
+    
+    Also handles the authentication handshake between GitHub and Travis.
+    """
+
+    def __init__(self, endpoint, access_token):
+        endpoint = endpoint.rstrip('/')
         self.endpoint = endpoint  # type: str
-        self.travis_token = travis_token  # type: str
+        self.access_token = access_token  # type: str
         self.session = requests.Session()
+
+    @staticmethod
+    def auth_handshake(travis_endpoint,
+                       github_endpoint,
+                       github_username,
+                       github_password):
+
+        """Attempt to authenticate with a Travis endpoint and either
+        raise an error if no access token is returned or return
+        an instance of Travis for that endpoint.
+        
+        We actually use the Travis API v2 for all of this because
+        API v3 doesn't provide authentication options?
+        
+        We don't store the GitHub username or password locally, we only
+        store the Travis API token.
+        
+        :param travis_endpoint: Travis API endpoint to authenticate for.
+        :param github_endpoint: GitHub API endpoint to authenticate against.
+        :param github_username: GitHub username to authenticate for.
+        :param github_password: GitHub password to authenticate with.
+        """
+        travis_endpoint = travis_endpoint.rstrip('/')
+        github_endpoint = github_endpoint.rstrip('/')
+
+        # travis-ci.org requires fewer scopes than travis-ci.com.
+        if travis_endpoint == 'https://api.travis-ci.org':
+            scopes = ['read:org', 'user:email', 'repo_deployment',
+                      'repo:status', 'public_repo', 'write:repo_hook']
+        else:
+            scopes = ['user:email', 'read:org', 'repo']
+
+        args = (github_endpoint, github_username, github_password, scopes)
+        github_token, token_id = Travis._create_github_token(*args)
+
+        # Make sure we attempt to delete the token after use.
+        try:
+            access_token = Travis._swap_github_token_for_access_token(
+                travis_endpoint, github_token)
+        finally:
+            args = (github_endpoint, github_username,
+                    github_password, token_id)
+            Travis._delete_github_token(*args)
+
+        return Travis(travis_endpoint, access_token)
+
+    @staticmethod
+    def _create_github_token(endpoint, username, password, scopes):
+        """Create a temporary GitHub Personal Access Token with the given
+        scopes using a username and password supplied by the user.
+        
+        :param endpoint: GitHub API endpoint to authenticate with.
+        :param username: GitHub username.
+        :param password: GitHub password.
+        :param scopes: List of scopes to add to the Personal Access Token.
+        :returns: A tuple containing the token along with the id of the token
+                  so it may be deleted after creation.
+        :rtype: typing.Tuple[str, int]"""
+
+        headers = {'User-Agent': 'trytravis/' + __version__,
+                   'Accept': 'application/vnd.github.v3+json'}
+        data = {'scopes': scopes,
+                'note': 'Temporary authentication token for trytravis.'}
+
+        # First we contant GitHub and attempt to authenticate with
+        # them to create a Personal Access token with the proper scopes.
+        with requests.post(endpoint + '/authorizations',
+                           headers=headers,
+                           auth=(username, password),
+                           json=data) as r:
+            if not r.ok:
+                raise AuthenticationError('Could not create a personal '
+                                          'access token on GitHub. Bad '
+                                          'credentials?')
+
+            data = r.json()
+            return data['token'], data['id']
+
+    @staticmethod
+    def _delete_github_token(endpoint, username, password, token_id):
+        """Delete a GitHub Personal Access Token that was created previously.
+        
+        :param endpoint: GitHub API endpoint.
+        :param username: GitHub username.
+        :param password: GitHub password.
+        :param token_id: ID of the token received from _create_github_token()
+        """
+        headers = {'User-Agent': 'trytravis/' + __version__,
+                   'Accept': 'application/vnd.github.v3+json'}
+
+        requests.request('DELETE', endpoint + '/authorizations/%d' % token_id,
+                         headers=headers,
+                         auth=(username, password))
+
+    @staticmethod
+    def _swap_github_token_for_access_token(endpoint, github_token):
+        """Swaps a GitHub Personal Access token for a Travis Access Token.
+        
+        :param endpoint: Travis API endpoint to authenticate with.
+        :param github_token: GitHub Personal Access token.
+        :returns: Travis Access Token.
+        """
+        headers = {'User-Agent': 'trytravis/' + __version__,
+                   'Accept': 'application/vnd.travis-ci.2+json'}
+
+        with requests.post(endpoint + '/auth/github',
+                           headers=headers,
+                           json={'github_token': github_token}) as r:
+            if not r.ok:
+                raise AuthenticationError('Could not swap a GitHub personal '
+                                          'access token for a Travis Access '
+                                          'token.')
+
+            return r.json()['access_token']
 
     @property
     def headers(self):
         return {'Travis-API-Version': '3',
                 'User-Agent': 'trytravis/' + __version__,
-                'Authorization': 'token ' + self.travis_token}
+                'Authorization': 'token ' + self.access_token,
+                'Accept': 'application/json'}
 
     def request(self, method, path, **kwargs):
+        """Make a request to the Travis API.
+        
+        :param method: HTTP method to use. (ie 'GET', 'POST'...)
+        :param path: URL path to request. (ie '/user')
+        :param kwargs: Arguments to pass to requests.
+        :return: Request response.
+        """
         headers = self.headers
         if 'headers' in kwargs:
             for key, value in kwargs['headers'].items():
@@ -26,17 +156,14 @@ class Travis(object):
         return self.session.request(method, self.endpoint + path, **kwargs)
 
     def get_owner(self, login):
-        """
+        """Get an Owner by their login information.
+        
         :param login: GitHub login of either the Organization or User
         :rtype: trytravis.api.Owner
         """
         from ._owner import User, Organization
         path = '/owner/%s' % login
         with self.request('GET', path) as r:
-            if not r.status_code == 404:
-                raise ResourceNotFound(path)
-            elif not r.ok:
-                raise APIError(r.status_code)
             data = r.json()
             if data['@type'] == 'user':
                 return User(self, data['id'], data={'login': data['login']})
@@ -44,8 +171,9 @@ class Travis(object):
                 return Organization(self, data['id'], data={'login': data['login']})
 
     @property
-    def whoami(self):
-        """
+    def current_user(self):
+        """Gets the currently authenticated User.
+        
         :rtype: trytravis.api.User
         :return: Returns the current authenticated user.
         """
