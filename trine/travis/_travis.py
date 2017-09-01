@@ -208,6 +208,10 @@ class Resource(object):
         self._data = data
         self._cache_time = None
 
+    def refresh(self):
+        """Refreshes all remote properties for the resource."""
+        self._get_standard_rep()
+
     def _get_property(self, name, cache_time=10):
         """Get a basic property from the JSON
         representation of the object. If needed
