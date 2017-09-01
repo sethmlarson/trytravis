@@ -1,6 +1,6 @@
 [run]
 include =
-    trytravis/*
+    trine/*
 
 [report]
 exclude_lines =
