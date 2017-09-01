@@ -372,7 +372,7 @@ def _main(argv):
         # No wait
         elif arg in ['--no-wait', '-nw']:
             url = _load_github_repo()
-            commit, committed = _submit_changes_to_github_repo(os.getcwd(), 
+            commit, committed = _submit_changes_to_github_repo(os.getcwd(),
                                                                url)
             build_id = _wait_for_travis_build(url, commit, committed)
 
