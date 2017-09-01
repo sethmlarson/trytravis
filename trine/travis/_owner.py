@@ -1,4 +1,3 @@
-import datetime
 from ._travis import Resource
 
 
@@ -74,8 +73,7 @@ class User(Owner):
         
         :rtype: datetime.datetime
         """
-        timestamp = self._get_property('synced_at')
-        return datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%SZ')
+        return self._convert_dt(self._get_property('synced_at'))
     
     def sync(self):
         """Syncs the user with the latest information from GitHub."""

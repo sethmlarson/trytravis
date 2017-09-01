@@ -1,3 +1,4 @@
+import datetime
 import time
 import requests
 import trent
@@ -215,7 +216,8 @@ class Resource(object):
     def _get_property(self, name, cache_time=10):
         """Get a basic property from the JSON
         representation of the object. If needed
-        will refresh the object property. """
+        will refresh the object property.
+        """
         current_time = time.time()
 
         # If we're using a cached property we might need
@@ -231,15 +233,20 @@ class Resource(object):
 
     def _del_property(self, name):
         """Invalidate a property if it is defined within `_data`
-        in order to force a request on next usage."""
+        in order to force a request on next usage.
+        """
         if name in self._data:
             del self._data[name]
 
     def _get_standard_rep(self):
         """Implement this function per-model to fill the
-        `_data` property with JSON values for the model. """
+        `_data` property with JSON values for the model.
+        """
         raise NotImplementedError()
 
+    def _convert_dt(self, timestamp):
+        """Converts a timestamp value from the API into a datetime object."""
+        return datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%SZ')
 
 class Paginator(object):
     """Helper class for lazily evaluating paginated
