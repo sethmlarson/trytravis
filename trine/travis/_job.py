@@ -99,3 +99,18 @@ class Job(Resource):
         else:
             return None
 
+    def cancel(self):
+        """This cancels a currently running job."""
+        self._travis.request('POST', '/job/%d/cancel' % self.id)
+
+    def restart(self):
+        """This restarts a job that has completed or been canceled."""
+        self._travis.request('POST', '/job/%d/restart' % self.id)
+
+    def debug(self):
+        """This restarts a job in debug mode, enabling the logged-in user
+        to SSH into the build VM. This feature is only available on the
+        travis-ci.com domain.
+        """
+        self._travis.request('POST', '/job/%d/debug' % self.id)
+
