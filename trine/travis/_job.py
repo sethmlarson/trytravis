@@ -114,3 +114,7 @@ class Job(Resource):
         """
         self._travis.request('POST', '/job/%d/debug' % self.id)
 
+    def _get_standard_rep(self):
+        with self._travis.request('GET', '/job/%d' % self.id) as r:
+            self._data = r.json()
+

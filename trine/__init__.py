@@ -57,4 +57,4 @@ else:
 del _home_dir
 
 # User-Agent for all HTTP requests.
-user_agent = '%s/%s' % (__title__, __version__)
+user_agent = 'Travis/%s/%s' % (__title__, __version__)
