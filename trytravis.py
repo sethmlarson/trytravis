@@ -71,6 +71,8 @@ _USAGE = ('usage: trytravis [command]?\n'
           'submitting an issue.\n'
           '  --repo, -r [repo]?    Tells the program you wish to setup '
           'your building repository.\n'
+          '  --no-wait, -nw            Don\'t wait for the builds to end.\n'
+
           '\n'
           'If you\'re still having troubles feel free to open an '
           'issue at our\nissue tracker: https://github.com/SethMichaelLarson'
@@ -366,6 +368,13 @@ def _main(argv):
             else:
                 url = None
             _input_github_repo(url)
+
+        # No wait
+        elif arg in ['--no-wait', '-nw']:
+            url = _load_github_repo()
+            commit, committed = _submit_changes_to_github_repo(os.getcwd(),
+                                                               url)
+            build_id = _wait_for_travis_build(url, commit, committed)
 
         # Help string
         else:
