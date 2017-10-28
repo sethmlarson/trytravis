@@ -151,7 +151,7 @@ def _submit_changes_to_github_repo(path, url):
     try:
         try:
             repo.delete_remote('trytravis')
-        except:
+        except Exception:
             pass
         print('Adding a temporary remote to '
               '`%s`...' % url)
@@ -180,7 +180,7 @@ def _submit_changes_to_github_repo(path, url):
             repo.git.reset('HEAD^')
         try:
             repo.delete_remote('trytravis')
-        except:
+        except Exception:
             pass
     return commit, committed_at
 
