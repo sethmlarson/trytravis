@@ -24,6 +24,7 @@ import os
 import re
 import colorama
 import git
+from git.objects.util import utc
 
 
 __title__ = 'trytravis'
@@ -80,8 +81,6 @@ _USAGE = ('usage: trytravis [command]?\n'
 
 _HTTPS_REGEX = re.compile(r'^https://(?:www\.)?github\.com/([^/]+)/([^/]+)$')
 _SSH_REGEX = re.compile(r'^ssh://git@github\.com/([^/]+)/([^/]+)$')
-_UTC_OFFSET = round((datetime.datetime.now() -
-                     datetime.datetime.utcnow()).total_seconds())
 
 
 def _input_github_repo(url=None):
@@ -152,7 +151,7 @@ def _submit_changes_to_github_repo(path, url):
     try:
         try:
             repo.delete_remote('trytravis')
-        except:
+        except Exception:
             pass
         print('Adding a temporary remote to '
               '`%s`...' % url)
@@ -172,8 +171,6 @@ def _submit_changes_to_github_repo(path, url):
                 raise
         commit = repo.head.commit.hexsha
         committed_at = repo.head.commit.committed_datetime
-        committed_at += datetime.timedelta(seconds=_UTC_OFFSET)
-        committed_at = committed_at.strftime('%Y-%m-%d %H:%M:%S')
 
         print('Pushing to `trytravis` remote...')
         remote.push(force=True)
@@ -183,7 +180,7 @@ def _submit_changes_to_github_repo(path, url):
             repo.git.reset('HEAD^')
         try:
             repo.delete_remote('trytravis')
-        except:
+        except Exception:
             pass
     return commit, committed_at
 
@@ -211,7 +208,10 @@ def _wait_for_travis_build(url, commit, committed_at):
             json = r.json()
             for travis_commit in sorted(json['commits'],
                                         key=lambda x: x['committed_at']):
-                if travis_commit['committed_at'] < committed_at:
+                travis_committed_at = datetime.datetime.strptime(
+                    travis_commit['committed_at'], '%Y-%m-%dT%H:%M:%SZ'
+                ).replace(tzinfo=utc)
+                if travis_committed_at < committed_at:
                     continue
                 commit_to_sha[travis_commit['id']] = travis_commit['sha']
 
