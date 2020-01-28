@@ -86,6 +86,8 @@ Run `trytravis --repo` and enter in the URL to the repository that you just crea
 You can use `ssh://git@github.com/[USERNAME]/[PROJECT]` or
 `https://github.com/[USERNAME]/[PROJECT]` as the URL for the repository.
 
+**IMPORTANT**: Make sure the project name in copied URL doesn't contain the `.git` suffix
+
 ### Ready to Use the Tool
 
 Move to the base directory of your project and execute the following command:
